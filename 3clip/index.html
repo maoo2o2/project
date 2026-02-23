@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3clip</title>
+  <script type="module" crossorigin src="/3clip/assets/index-BFHaw2TW.js"></script>
+  <link rel="stylesheet" crossorigin href="/3clip/assets/index-DBRcLW0z.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <span class="logo">3clip</span>
+      <span class="tagline">3秒でつながる、あなたの物語。</span>
+    </header>
+
+    <!-- Mode selector -->
+    <section class="mode-bar">
+      <button id="btn-camera" class="mode-btn active">
+        <span class="icon">●</span> 3秒撮影
+      </button>
+      <button id="btn-upload" class="mode-btn">
+        <span class="icon">↑</span> アップロード
+      </button>
+    </section>
+
+    <!-- Camera panel -->
+    <section id="panel-camera" class="panel">
+      <div class="camera-wrap">
+        <video id="camera-preview" autoplay muted playsinline></video>
+        <div id="countdown" class="countdown hidden"></div>
+      </div>
+      <button id="btn-record" class="action-btn primary" disabled>撮影開始</button>
+      <p class="hint">カメラへのアクセスを許可してください</p>
+    </section>
+
+    <!-- Upload panel -->
+    <section id="panel-upload" class="panel hidden">
+      <div id="drop-zone" class="drop-zone">
+        <p class="drop-label">動画 / 写真をここにドロップ</p>
+        <p class="drop-sub">または</p>
+        <label class="file-label">
+          ファイルを選択
+          <!-- iOS Safari は hidden だとタップが届かないため position:absolute で隠す -->
+          <input id="file-input" type="file"
+            accept="video/*,video/mp4,video/quicktime,video/mov,image/*"
+            multiple />
+        </label>
+        <p class="drop-hint">動画は先頭3秒を使用 / 写真は3秒表示</p>
+      </div>
+    </section>
+
+    <!-- Clip tray -->
+    <section class="tray-section">
+      <div class="tray-header">
+        <span class="tray-title">クリップ</span>
+        <span id="clip-counter" class="clip-counter">0 / 20</span>
+      </div>
+      <div id="clip-tray" class="clip-tray">
+        <div class="tray-empty" id="tray-empty">
+          <p>クリップがまだありません</p>
+          <p class="tray-empty-sub">撮影またはアップロードして追加しましょう</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- BGM selector -->
+    <section class="bgm-section">
+      <div class="bgm-header">
+        <span class="tray-title">BGM</span>
+        <span class="badge-free">無料</span>
+      </div>
+      <div class="bgm-list">
+        <label class="bgm-item">
+          <input type="radio" name="bgm" value="none" checked />
+          <span class="bgm-name">なし</span>
+        </label>
+        <label class="bgm-item">
+          <input type="radio" name="bgm" value="upbeat1" />
+          <span class="bgm-name">Sunbeam Serenade</span>
+          <span class="bgm-tag">Upbeat</span>
+          <button class="bgm-play" data-track="upbeat1" type="button">▶</button>
+        </label>
+        <label class="bgm-item">
+          <input type="radio" name="bgm" value="upbeat2" />
+          <span class="bgm-name">Playful Groove</span>
+          <span class="bgm-tag">Upbeat</span>
+          <button class="bgm-play" data-track="upbeat2" type="button">▶</button>
+        </label>
+        <label class="bgm-item">
+          <input type="radio" name="bgm" value="chill1" />
+          <span class="bgm-name">Rainy Day Reflections</span>
+          <span class="bgm-tag">Chill</span>
+          <button class="bgm-play" data-track="chill1" type="button">▶</button>
+        </label>
+        <label class="bgm-item">
+          <input type="radio" name="bgm" value="chill2" />
+          <span class="bgm-name">Easy Vibes Pop</span>
+          <span class="bgm-tag">Chill</span>
+          <button class="bgm-play" data-track="chill2" type="button">▶</button>
+        </label>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions-bar">
+      <div class="actions-info">
+        <span id="total-duration">0秒</span>
+        <span class="actions-sep">|</span>
+        <span id="clip-count-label">0クリップ</span>
+      </div>
+      <div class="actions-btns">
+        <button id="btn-preview" class="action-btn secondary" disabled>▶ プレビュー</button>
+        <button id="btn-export" class="action-btn primary" disabled>↓ 書き出す</button>
+      </div>
+    </section>
+
+    <!-- Processing overlay -->
+    <div id="processing-overlay" class="overlay hidden">
+      <div class="overlay-box">
+        <div class="spinner"></div>
+        <p id="processing-msg">処理中...</p>
+        <p id="processing-sub" class="overlay-sub"></p>
+      </div>
+    </div>
+
+    <!-- Preview modal -->
+    <div id="preview-modal" class="overlay hidden">
+      <div class="modal-box">
+        <button id="btn-close-preview" class="modal-close">✕</button>
+        <video id="preview-video" controls playsinline></video>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
