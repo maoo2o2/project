@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3clip</title>
-  <script type="module" src="/project/3clip/assets/index-0Zl59pS0.js"></script>
-  <link rel="stylesheet" href="/project/3clip/assets/index-tU8SpAze.css">
+  <script type="module" src="/project/3clip/assets/index-BV2eEqub.js"></script>
+  <link rel="stylesheet" href="/project/3clip/assets/index-DsYw3ZIr.css">
 </head>
 <body>
   <div id="app">
@@ -28,12 +28,18 @@
     <!-- Camera panel -->
     <section id="panel-camera" class="panel">
       <div class="camera-wrap">
-        <video id="camera-preview" autoplay muted playsinline></video>
+        <!-- カメラ未起動のプレースホルダー -->
+        <div id="camera-placeholder" class="camera-placeholder">
+          <span class="camera-placeholder-icon">📷</span>
+          <span class="camera-placeholder-text">カメラを起動して撮影</span>
+        </div>
+        <video id="camera-preview" autoplay muted playsinline style="display:none;"></video>
         <div id="record-progress" class="record-progress hidden"></div>
-        <button id="btn-flip-camera" class="flip-camera-btn" title="カメラ切り替え">⟳</button>
+        <button id="btn-flip-camera" class="flip-camera-btn hidden" title="カメラ切り替え">⟳</button>
       </div>
-      <button id="btn-record" class="action-btn primary" disabled>撮影開始</button>
-      <p class="hint">カメラへのアクセスを許可してください</p>
+      <button id="btn-start-camera" class="action-btn primary">📷 カメラを起動</button>
+      <button id="btn-record" class="action-btn primary" style="display:none;" disabled>撮影開始</button>
+      <p class="hint" id="camera-hint"></p>
     </section>
 
     <!-- Upload panel -->
