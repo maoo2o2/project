@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>3clip</title>
-  <script type="module" src="/project/3clip/assets/index-bdRbC1hb.js"></script>
-  <link rel="stylesheet" href="/project/3clip/assets/index-DsYw3ZIr.css">
+  <script type="module" src="/project/3clip/assets/index-GM25R_id.js"></script>
+  <link rel="stylesheet" href="/project/3clip/assets/index-BgMnazKB.css">
 </head>
 <body>
   <div id="app">
@@ -35,10 +35,13 @@
         </div>
         <video id="camera-preview" autoplay muted playsinline style="display:none;"></video>
         <div id="record-progress" class="record-progress hidden"></div>
-        <button id="btn-flip-camera" class="flip-camera-btn hidden" title="カメラ切り替え">⟳</button>
+        <!-- 撮影ボタン・フリップボタンを映像内上部にオーバーレイ -->
+        <div class="camera-controls hidden" id="camera-controls">
+          <button id="btn-flip-camera" class="flip-camera-btn" title="カメラ切り替え">⟳</button>
+          <button id="btn-record" class="record-btn" disabled>⏺</button>
+        </div>
       </div>
       <button id="btn-start-camera" class="action-btn primary">📷 カメラを起動</button>
-      <button id="btn-record" class="action-btn primary" style="display:none;" disabled>撮影開始</button>
       <p class="hint" id="camera-hint"></p>
     </section>
 
