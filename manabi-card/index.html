@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>春休み学びカード</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: #0f0a1e; color: #fff; min-height: 100dvh; overflow-x: hidden; }
+
+  /* ===== Card Flip ===== */
+  .card-flip { perspective: 1000px; }
+  .card-flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4,0,0.2,1); transform-style: preserve-3d; }
+  .card-flip-inner.flipped { transform: rotateY(180deg); }
+  .card-front, .card-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 12px; }
+  .card-front { transform: rotateY(180deg); }
+
+  /* ===== Rarity Glows ===== */
+  .rarity-1 { border: 2px solid #9ca3af; }
+  .rarity-2 { border: 2px solid #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+  .rarity-3 { border: 2px solid #3b82f6; box-shadow: 0 0 16px rgba(59,130,246,0.5); }
+  .rarity-4 { border: 2px solid #a855f7; box-shadow: 0 0 20px rgba(168,85,247,0.6), 0 0 40px rgba(168,85,247,0.2); }
+  .rarity-5 { border: 2px solid #facc15; box-shadow: 0 0 30px rgba(250,204,21,0.7), 0 0 60px rgba(250,204,21,0.3), 0 0 90px rgba(250,204,21,0.15); animation: legendary-pulse 2s ease-in-out infinite; }
+  @keyframes legendary-pulse {
+    0%,100% { box-shadow: 0 0 30px rgba(250,204,21,0.7), 0 0 60px rgba(250,204,21,0.3); }
+    50% { box-shadow: 0 0 40px rgba(250,204,21,0.9), 0 0 80px rgba(250,204,21,0.5), 0 0 120px rgba(250,204,21,0.2); }
+  }
+
+  .star-1 { color: #9ca3af; } .star-2 { color: #22c55e; } .star-3 { color: #3b82f6; } .star-4 { color: #a855f7; } .star-5 { color: #facc15; }
+
+  /* ===== Gacha Shake (3-stage escalation) ===== */
+  @keyframes gacha-shake-1 { 0%,100%{transform:rotate(0) scale(1)} 25%{transform:rotate(-5deg) scale(1.02)} 75%{transform:rotate(5deg) scale(1.02)} }
+  @keyframes gacha-shake-2 { 0%,100%{transform:rotate(0) scale(1)} 25%{transform:rotate(-12deg) scale(1.05)} 75%{transform:rotate(12deg) scale(1.05)} }
+  @keyframes gacha-shake-3 { 0%,100%{transform:rotate(0) scale(1)} 20%{transform:rotate(-18deg) scale(1.1)} 40%{transform:rotate(18deg) scale(1.08)} 60%{transform:rotate(-15deg) scale(1.12)} 80%{transform:rotate(15deg) scale(1.1)} }
+  .gacha-shake-1 { animation: gacha-shake-1 0.2s ease-in-out 4; }
+  .gacha-shake-2 { animation: gacha-shake-2 0.15s ease-in-out 5; }
+  .gacha-shake-3 { animation: gacha-shake-3 0.12s ease-in-out 6; }
+
+  /* ===== Light Burst ===== */
+  @keyframes light-burst {
+    0% { transform: scale(0); opacity: 0; }
+    30% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+  .light-burst {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .light-burst-circle {
+    width: 120px; height: 120px; border-radius: 50%;
+    animation: light-burst 0.7s ease-out forwards;
+  }
+
+  /* ===== Screen Flash ===== */
+  @keyframes screen-flash {
+    0% { opacity: 0; } 15% { opacity: 0.8; } 100% { opacity: 0; }
+  }
+  .screen-flash {
+    position: fixed; inset: 0; z-index: 55; pointer-events: none;
+    animation: screen-flash 0.5s ease-out forwards;
+  }
+
+  /* ===== Task Complete ===== */
+  @keyframes task-complete-pop {
+    0% { transform: scale(1); }
+    20% { transform: scale(0.95); }
+    50% { transform: scale(1.08); }
+    70% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+  }
+  .task-complete-pop { animation: task-complete-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  @keyframes checkmark-draw {
+    0% { stroke-dashoffset: 30; opacity: 0; }
+    40% { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== Ripple ===== */
+  @keyframes ripple {
+    0% { transform: scale(0); opacity: 0.6; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+
+  /* ===== Confetti / Particles ===== */
+  @keyframes confetti-pop {
+    0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes sparkle {
+    0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+    50% { transform: scale(1) rotate(180deg); opacity: 1; }
+  }
+
+  /* ===== Card Entrance ===== */
+  @keyframes card-entrance {
+    0% { transform: scale(0.3) rotateZ(-10deg); opacity: 0; }
+    60% { transform: scale(1.1) rotateZ(2deg); opacity: 1; }
+    100% { transform: scale(1) rotateZ(0); opacity: 1; }
+  }
+  .card-entrance { animation: card-entrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  /* ===== Reward Glow ===== */
+  @keyframes reward-glow {
+    0%,100% { box-shadow: 0 0 20px rgba(251,191,36,0.4), 0 0 40px rgba(251,191,36,0.1); }
+    50% { box-shadow: 0 0 40px rgba(251,191,36,0.7), 0 0 80px rgba(251,191,36,0.3); }
+  }
+  .reward-glow { animation: reward-glow 1.5s ease-in-out infinite; }
+
+  /* ===== Rainbow ===== */
+  @keyframes five-star-bg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  .five-star-reveal { background: linear-gradient(135deg, #facc15, #f97316, #ef4444, #a855f7, #3b82f6, #facc15); background-size: 600% 600%; animation: five-star-bg 4s ease infinite; }
+
+  /* ===== Floating Text ===== */
+  @keyframes float-up {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-15px) scale(1.3); opacity: 1; }
+    100% { transform: translateY(-80px) scale(1); opacity: 0; }
+  }
+  .float-up { animation: float-up 1.5s ease-out forwards; }
+
+  /* ===== Misc ===== */
+  .tab-bar { background: linear-gradient(to top, #1a1030, #1a1030ee); backdrop-filter: blur(8px); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: #4c1d95; border-radius: 2px; }
+
+  /* ===== Gacha Button Glow ===== */
+  @keyframes btn-glow {
+    0%,100% { box-shadow: 0 0 20px rgba(168,85,247,0.4); }
+    50% { box-shadow: 0 0 40px rgba(168,85,247,0.7), 0 0 60px rgba(219,39,119,0.3); }
+  }
+  .btn-glow { animation: btn-glow 2s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ========== SOUND ==========
+const _audioCtx = { current: null };
+function getAudioCtx() {
+  if (!_audioCtx.current) _audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx.current;
+}
+function playSound(type) {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const t = ctx.currentTime;
+    const osc = (type2, freq, gainVal, duration, startTime = t, ramp) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = type2; o.frequency.setValueAtTime(freq, startTime);
+      if (ramp) o.frequency.exponentialRampToValueAtTime(ramp, startTime + duration * 0.6);
+      g.gain.setValueAtTime(gainVal, startTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      o.start(startTime); o.stop(startTime + duration);
+    };
+    if (type === 'check') {
+      osc('sine', 660, 0.25, 0.18, t, 1000);
+    }
+    if (type === 'gacha-shake1') {
+      osc('sawtooth', 55, 0.12, 0.5);
+    }
+    if (type === 'gacha-shake2') {
+      osc('sawtooth', 70, 0.18, 0.5);
+    }
+    if (type === 'gacha-shake3') {
+      osc('sawtooth', 90, 0.22, 0.5);
+    }
+    if (type === 'gacha-burst') {
+      osc('sine', 90, 0.5, 0.4, t, 25);
+      osc('sine', 900, 0.2, 0.3, t, 2200);
+    }
+    if (type === 'card-flip') {
+      // ノイズ（シュッ）
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) * 0.8;
+      const src = ctx.createBufferSource();
+      const f = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = buf; f.type = 'bandpass'; f.frequency.value = 5000; f.Q.value = 0.5;
+      src.connect(f); f.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.4, t); src.start(t);
+    }
+    if (type === 'rare-reveal') {
+      [440, 554, 659, 880].forEach((freq, i) => osc('sine', freq, 0.18, 0.28, t + i * 0.08));
+    }
+    if (type === 'legendary-reveal') {
+      [261, 329, 392, 523, 659, 784].forEach((freq, i) => osc('triangle', freq, 0.22, 0.5, t + i * 0.1));
+    }
+    if (type === 'reward-reveal') {
+      [523, 659, 784, 1046].forEach((freq, i) => osc('triangle', freq, 0.2, 0.35, t + i * 0.09));
+    }
+    if (type === 'all-done') {
+      [523, 659, 784, 1046, 1318].forEach((freq, i) => osc('triangle', freq, 0.28, 0.5, t + i * 0.13));
+    }
+    if (type === 'battle-appear') {
+      osc('sawtooth', 55, 0.3, 0.8, t, 250);
+      osc('square', 330, 0.15, 0.3, t + 0.4);
+    }
+    if (type === 'battle-hit') {
+      osc('square', 440, 0.2, 0.08, t, 120);
+      osc('sine', 220, 0.12, 0.12);
+    }
+    if (type === 'battle-enemy-hit') {
+      osc('sawtooth', 180, 0.18, 0.1, t, 90);
+    }
+    if (type === 'battle-win') {
+      [523, 659, 784, 1046, 1318, 1568].forEach((f, i) => osc('triangle', f, 0.25, 0.4, t + i * 0.09));
+    }
+    if (type === 'battle-lose') {
+      [440, 330, 220, 165].forEach((f, i) => osc('sine', f, 0.2, 0.4, t + i * 0.15));
+    }
+  } catch(e) {}
+}
+
+// ========== CARDS ==========
+const ALL_CARDS = [
+  { id: 1,  name: 'スライムくん',     rarity: 1, type: 'モンスター', emoji: '🟢' },
+  { id: 2,  name: 'コボルド',         rarity: 1, type: 'モンスター', emoji: '👹' },
+  { id: 3,  name: '見習い剣士',       rarity: 1, type: '冒険者',     emoji: '⚔️' },
+  { id: 4,  name: '村の釣り師',       rarity: 1, type: '冒険者',     emoji: '🎣' },
+  { id: 5,  name: 'たいまつコウモリ', rarity: 1, type: 'モンスター', emoji: '🦇' },
+  { id: 6,  name: 'キノコ戦士',       rarity: 1, type: 'モンスター', emoji: '🍄' },
+  { id: 7,  name: 'アーチャー',       rarity: 2, type: '冒険者',     emoji: '🏹' },
+  { id: 8,  name: 'シーフ',           rarity: 2, type: '冒険者',     emoji: '🗡️' },
+  { id: 9,  name: 'ゴブリンリーダー', rarity: 2, type: 'モンスター', emoji: '👺' },
+  { id: 10, name: 'ストーンゴーレム', rarity: 2, type: 'モンスター', emoji: '🗿' },
+  { id: 11, name: '森の魔女',         rarity: 2, type: '冒険者',     emoji: '🧙‍♀️' },
+  { id: 12, name: 'ナイト',           rarity: 3, type: '冒険者',     emoji: '🛡️' },
+  { id: 13, name: 'ドラゴンパピー',   rarity: 3, type: 'モンスター', emoji: '🐉' },
+  { id: 14, name: '氷の精霊',         rarity: 3, type: 'モンスター', emoji: '❄️' },
+  { id: 15, name: '聖騎士',           rarity: 3, type: '冒険者',     emoji: '⚜️' },
+  { id: 16, name: '大魔法使い',       rarity: 4, type: '冒険者',     emoji: '🔮' },
+  { id: 17, name: 'フェニックス',     rarity: 4, type: 'モンスター', emoji: '🔥' },
+  { id: 18, name: 'ダークナイト',     rarity: 4, type: '冒険者',     emoji: '🌑' },
+  { id: 19, name: '伝説の勇者',       rarity: 5, type: '冒険者',     emoji: '👑' },
+  { id: 20, name: '魔王ゼロス',       rarity: 5, type: 'モンスター', emoji: '😈' },
+  { id: 21, name: 'おばけ',           rarity: 2, type: 'モンスター', emoji: '👻' },
+  { id: 22, name: 'ガイコツ',         rarity: 2, type: 'モンスター', emoji: '💀' },
+  { id: 23, name: 'オオカミ',         rarity: 3, type: 'モンスター', emoji: '🐺' },
+];
+
+const RARITY_WEIGHTS = { 1: 35, 2: 30, 3: 20, 4: 12, 5: 3 };
+const RARITY_COLORS = { 1: '#9ca3af', 2: '#22c55e', 3: '#3b82f6', 4: '#a855f7', 5: '#facc15' };
+const RARITY_BG = { 1: '#1f2937', 2: '#052e16', 3: '#0c1a3d', 4: '#2e0854', 5: '#422006' };
+const RARITY_LABELS = { 1: 'コモン', 2: 'アンコモン', 3: 'レア', 4: 'スーパーレア', 5: 'レジェンド' };
+
+const REWARDS = [
+  { id: 'tv',          name: 'テレビ 15分',              emoji: '📺', rate: 15, cooldown: 3 },
+  { id: 'roblox',      name: 'ロブロックス 15分',         emoji: '🎮', rate: 15, cooldown: 3 },
+  { id: 'hug',         name: 'ママとぎゅー',              emoji: '🤗', rate: 10 },
+  { id: 'prank',       name: 'パパ/ママにいたずら1回OK',   emoji: '😜', rate: 8 },
+  { id: 'rare-ticket', name: 'レアカードチケット',          emoji: '✨', rate: 20, specialType: 'rareTicket' },
+  { id: 'chore-skip',  name: 'お手伝い免除チケット',       emoji: '🎫', rate: 3,  oneTime: true },
+  { id: 'compliment',  name: 'いいとこ5個言ってもらう',    emoji: '💬', rate: 2,  oneTime: true },
+  { id: 'game-make',   name: 'ゲーム作る権',              emoji: '🕹️', rate: 2,  oneTime: true },
+];
+
+// ========== BATTLE ==========
+const ENEMIES = [
+  { id: 'slime',    name: 'スライム',        emoji: '🟢', hp: 20, attack: 3,  cardDrop: 1  },
+  { id: 'bat',      name: 'こうもり',         emoji: '🦇', hp: 22, attack: 4,  cardDrop: 5  },
+  { id: 'goblin',   name: 'ゴブリン',         emoji: '👺', hp: 30, attack: 5,  cardDrop: 9  },
+  { id: 'ghost',    name: 'おばけ',           emoji: '👻', hp: 28, attack: 5,  cardDrop: 21 },
+  { id: 'skeleton', name: 'ガイコツ',         emoji: '💀', hp: 35, attack: 6,  cardDrop: 22 },
+  { id: 'wolf',     name: 'オオカミ',         emoji: '🐺', hp: 40, attack: 7,  cardDrop: 23 },
+  { id: 'witch',    name: 'まじょ',           emoji: '🧙', hp: 45, attack: 8,  cardDrop: 11 },
+  { id: 'orc',      name: 'オーク',           emoji: '👹', hp: 55, attack: 9,  cardDrop: 2  },
+  { id: 'undead',   name: 'アンデッドナイト',  emoji: '🪦', hp: 60, attack: 10, cardDrop: 18 },
+  { id: 'dragon',   name: 'ドラゴン',         emoji: '🐲', hp: 80, attack: 12, cardDrop: 13 },
+];
+const SPRING_BOSS = {
+  id: 'spring-boss', name: '連休ラスボス', emoji: '👿',
+  hp: 150, attack: 14, maxHp: 150, cardDrop: 'all-remaining', isFinalBoss: true,
+};
+
+const SUPPORT_CARDS = [
+  { id: 's1', name: 'ぼうけんのつるぎ', emoji: '🗡️', rarity: 1, attack: 10, isSupport: true },
+  { id: 's2', name: 'まほうのたま',     emoji: '⚡',  rarity: 2, attack: 15, isSupport: true },
+  { id: 's3', name: 'ばくだん',         emoji: '💣',  rarity: 2, attack: 20, isSupport: true },
+];
+function cardAttackPower(card) {
+  if (card.attack) return card.attack;
+  return ({ 1: 8, 2: 13, 3: 22, 4: 35, 5: 55 })[card.rarity] || 5;
+}
+function checkBattleTrigger() {
+  return Math.random() < 0.35;
+}
+function recordBattleTrigger() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const d = JSON.parse(localStorage.getItem('mc-battle-today')) || {};
+    const count = (d.date === today ? d.count : 0) + 1;
+    localStorage.setItem('mc-battle-today', JSON.stringify({ date: today, count }));
+  } catch {}
+}
+
+const DEFAULT_TASKS = [
+  { id: 501, text: 'お風呂掃除をする',  genre: '🍳 生活スキル',   done: false, unlockHour: 0, unlockMinute: 0 },
+  { id: 502, text: 'ままとぎゅーする',  genre: '🤗 スキンシップ', done: false, unlockHour: 0, unlockMinute: 0 },
+  { id: 503, text: '明日の準備をする',  genre: '🌟 生活スキル',   done: false, unlockHour: 0, unlockMinute: 0 },
+];
+
+// ========== STORAGE ==========
+const SK = { tasks:'manabi-card-tasks', collection:'manabi-card-collection', history:'manabi-card-history', rewardCooldowns:'manabi-card-reward-cooldowns', rewardObtained:'manabi-card-reward-obtained', gachaTotal:'manabi-card-gacha-total', rareCardTicket:'manabi-card-rare-ticket', comment:'manabi-card-comment', gachaQueue:'manabi-card-gacha-queue', allClearBonus:'manabi-card-all-clear-bonus' };
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SK.tasks)) || [];
+    const savedMap = new Map(saved.map(t => [t.id, t]));
+    let tasks = DEFAULT_TASKS.map(dt => savedMap.has(dt.id) ? {...dt, done: savedMap.get(dt.id).done} : {...dt});
+    const today = new Date().toISOString().slice(0,10);
+    return { tasks, collection:JSON.parse(localStorage.getItem(SK.collection))||[], history:JSON.parse(localStorage.getItem(SK.history))||{cards:[],rewards:[]}, rewardCooldowns:JSON.parse(localStorage.getItem(SK.rewardCooldowns))||{}, rewardObtained:JSON.parse(localStorage.getItem(SK.rewardObtained))||{}, gachaTotal:parseInt(localStorage.getItem(SK.gachaTotal))||0, rareCardTicket:localStorage.getItem(SK.rareCardTicket)==='true', comment:localStorage.getItem(SK.comment)||'', gachaQueue:parseInt(localStorage.getItem(SK.gachaQueue))||0, allClearBonusClaimed:localStorage.getItem(SK.allClearBonus)===today };
+  } catch { return { tasks:DEFAULT_TASKS, collection:[], history:{cards:[],rewards:[]}, rewardCooldowns:{}, rewardObtained:{}, gachaTotal:0, rareCardTicket:false, comment:'', gachaQueue:0, allClearBonusClaimed:false }; }
+}
+function saveState(s) {
+  localStorage.setItem(SK.tasks,JSON.stringify(s.tasks)); localStorage.setItem(SK.collection,JSON.stringify(s.collection));
+  localStorage.setItem(SK.history,JSON.stringify(s.history)); localStorage.setItem(SK.rewardCooldowns,JSON.stringify(s.rewardCooldowns));
+  localStorage.setItem(SK.rewardObtained,JSON.stringify(s.rewardObtained)); localStorage.setItem(SK.gachaTotal,String(s.gachaTotal));
+  localStorage.setItem(SK.rareCardTicket,String(s.rareCardTicket)); localStorage.setItem(SK.comment,s.comment); localStorage.setItem(SK.gachaQueue,String(s.gachaQueue));
+  if (s.allClearBonusClaimed) localStorage.setItem(SK.allClearBonus, new Date().toISOString().slice(0,10));
+}
+
+// ========== GACHA LOGIC ==========
+function rollCard(rareTicketActive=false) {
+  const weights = rareTicketActive ? {4:65, 5:35} : {...RARITY_WEIGHTS};
+  const total = Object.values(weights).reduce((s,w)=>s+w, 0);
+  const rand = Math.random()*total; let cum=0, target=3;
+  for (const [r,w] of Object.entries(weights)) { cum+=w; if(rand<cum){target=parseInt(r);break;} }
+  const pool = ALL_CARDS.filter(c=>c.rarity===target);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function rollGacha(rewardCooldowns, rewardObtained, gachaTotal, rareCardTicket) {
+  const available = REWARDS.filter(r => {
+    if (r.oneTime && rewardObtained[r.id]) return false;
+    if (r.cooldown && rewardCooldowns[r.id] !== undefined && gachaTotal - rewardCooldowns[r.id] < r.cooldown) return false;
+    return true;
+  });
+  const cardRate = 85;
+  const rand = Math.random()*100;
+  if (rand<cardRate) return {type:'card', card:rollCard(rareCardTicket), reward:null};
+  const totalRewardRate = available.reduce((s,r)=>s+r.rate, 0);
+  const scale = (100-cardRate) / totalRewardRate;
+  let cum=cardRate;
+  for (const r of available) { cum+=r.rate*scale; if(rand<cum) return {type:'reward', card:null, reward:r}; }
+  return {type:'card', card:rollCard(rareCardTicket), reward:null};
+}
+
+// ========== TIME HELPERS ==========
+function isTaskUnlocked(task) {
+  const now=new Date(), m=(task.unlockMinute||0);
+  return now.getHours()*60+now.getMinutes() >= task.unlockHour*60+m;
+}
+function getMinutesUntilUnlock(task) {
+  const now=new Date(), unlock=new Date(); unlock.setHours(task.unlockHour,task.unlockMinute||0,0,0);
+  return now>=unlock ? 0 : Math.ceil((unlock-now)/60000);
+}
+function formatCountdown(min) { const h=Math.floor(min/60),m=min%60; return h>0?`${h}時間${m>0?m+'分':''}`:`${m}分`; }
+
+// ========== EFFECT COMPONENTS ==========
+
+// Confetti burst from a point
+function ConfettiEffect({ active, x = '50%', y = '50%', count = 24, colors }) {
+  if (!active) return null;
+  const defaultColors = ['#facc15','#ef4444','#3b82f6','#22c55e','#a855f7','#f97316','#ec4899','#14b8a6'];
+  const c = colors || defaultColors;
+  const particles = Array.from({ length: count }, (_, i) => {
+    const angle = (360 / count) * i + (Math.random() * 20 - 10);
+    const dist = 60 + Math.random() * 80;
+    const dx = Math.cos(angle * Math.PI / 180) * dist;
+    const dy = Math.sin(angle * Math.PI / 180) * dist;
+    const color = c[i % c.length];
+    const size = 4 + Math.random() * 6;
+    const rotation = Math.random() * 720;
+    const delay = Math.random() * 0.15;
+    const duration = 0.6 + Math.random() * 0.4;
+    const shape = Math.random() > 0.5 ? 'rounded-full' : 'rounded-sm';
+    return (
+      <div key={i} className={`absolute ${shape}`}
+        style={{
+          left: x, top: y, width: size, height: size, backgroundColor: color,
+          animation: `confetti-pop ${duration}s ease-out ${delay}s forwards`,
+          '--dx': `${dx}px`, '--dy': `${dy}px`, '--rot': `${rotation}deg`,
+          animationName: 'none',
+        }}
+        ref={el => {
+          if (el) {
+            el.style.animation = 'none';
+            el.offsetHeight;
+            el.style.animation = `confetti-pop ${duration}s ease-out ${delay}s forwards`;
+            el.animate([
+              { transform: 'translate(0,0) rotate(0deg) scale(1)', opacity: 1 },
+              { transform: `translate(${dx}px,${dy}px) rotate(${rotation}deg) scale(0.3)`, opacity: 0 }
+            ], { duration: duration * 1000, delay: delay * 1000, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' });
+          }
+        }}
+      />
+    );
+  });
+  return <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">{particles}</div>;
+}
+
+// Sparkle ring around revealed card
+function SparkleRing({ active, count = 12 }) {
+  if (!active) return null;
+  return (
+    <div className="absolute inset-0 pointer-events-none z-10">
+      {Array.from({ length: count }, (_, i) => {
+        const angle = (360 / count) * i;
+        const radius = 90;
+        const cx = 50 + Math.cos(angle * Math.PI / 180) * radius;
+        const cy = 50 + Math.sin(angle * Math.PI / 180) * radius;
+        const delay = i * 0.1;
+        return (
+          <div key={i} className="absolute text-yellow-300" style={{
+            left: `${cx}%`, top: `${cy}%`, transform: 'translate(-50%,-50%)',
+            animation: `sparkle 0.8s ease-in-out ${delay}s infinite`, fontSize: '12px'
+          }}>✦</div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Screen flash overlay
+function ScreenFlash({ color = '#fff' }) {
+  return <div className="screen-flash" style={{ backgroundColor: color }} />;
+}
+
+// ========== UI COMPONENTS ==========
+function Stars({ rarity, size = 'text-sm' }) {
+  return <span className={`star-${rarity} ${size}`}>{'★'.repeat(rarity)}</span>;
+}
+
+function CardDisplay({ card, size='normal', onClick, silhouette=false }) {
+  const w = size==='small'?'w-20 h-28':size==='large'?'w-48 h-64':'w-28 h-40';
+  const emojiSize = size==='small'?'text-2xl':size==='large'?'text-6xl':'text-3xl';
+  const nameSize = size==='small'?'text-[9px]':size==='large'?'text-base':'text-[10px]';
+  const starSize = size==='small'?'text-[8px]':size==='large'?'text-lg':'text-xs';
+  if (silhouette) return (
+    <div className={`${w} rounded-xl bg-gray-800/60 border-2 border-gray-700/50 flex items-center justify-center`} onClick={onClick}>
+      <span className="text-gray-600 text-3xl">?</span>
+    </div>
+  );
+  return (
+    <div className={`${w} rounded-xl rarity-${card.rarity} flex flex-col items-center justify-center gap-1 cursor-pointer relative overflow-hidden`}
+      style={{background:RARITY_BG[card.rarity]}} onClick={()=>onClick&&onClick(card)}>
+      {card.rarity===5&&<div className="absolute inset-0 five-star-reveal opacity-20"/>}
+      <span className={emojiSize}>{card.emoji}</span>
+      <Stars rarity={card.rarity} size={starSize}/>
+      <span className={`${nameSize} font-bold text-center px-1 leading-tight`}>{card.name}</span>
+    </div>
+  );
+}
+
+function CardModal({ card, isNew, onClose }) {
+  if (!card) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div className="relative card-entrance" onClick={e=>e.stopPropagation()}>
+        {isNew&&<div className="absolute -top-6 left-1/2 -translate-x-1/2 text-yellow-400 font-bold text-sm animate-bounce">NEW!</div>}
+        <div className={`w-56 h-80 rounded-2xl rarity-${card.rarity} flex flex-col items-center justify-center gap-3 relative overflow-hidden`}
+          style={{background:RARITY_BG[card.rarity]}}>
+          {card.rarity===5&&<div className="absolute inset-0 five-star-reveal opacity-20"/>}
+          <span className="text-7xl relative z-10">{card.emoji}</span>
+          <Stars rarity={card.rarity} size="text-xl"/>
+          <span className="text-xl font-black relative z-10">{card.name}</span>
+          <span className="text-xs opacity-60">{card.type}/{RARITY_LABELS[card.rarity]}</span>
+        </div>
+        <button onClick={onClose} className="mt-4 w-full py-2 rounded-xl bg-white/10 text-white font-bold">とじる</button>
+      </div>
+    </div>
+  );
+}
+
+// ========== ALL CLEAR BONUS MODAL ==========
+function AllClearBonusModal({ choices, onSelect }) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-6">
+      <p className="text-4xl mb-3">🎊</p>
+      <p className="text-2xl font-black text-yellow-300 mb-1">全クリボーナス！</p>
+      <p className="text-sm text-purple-300/70 mb-8">3枚から1枚えらんでゲット！</p>
+      <div className="flex gap-4 justify-center">
+        {choices.map(card => (
+          <button key={card.id} onClick={() => onSelect(card)}
+            className="active:scale-90 transition-transform flex flex-col items-center gap-2">
+            <CardDisplay card={card} size="normal" />
+            <span className="text-xs text-yellow-300 font-bold">タップ!</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ========== TASK SCREEN ==========
+function TaskScreen({ state, setState, setTab, setBattle }) {
+  const [popup, setPopup] = useState(null);
+  const [confettiAt, setConfettiAt] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [editHour, setEditHour] = useState(9);
+  const [editingId, setEditingId] = useState(null);
+  const [now, setNow] = useState(new Date());
+  const [allClearChoices, setAllClearChoices] = useState(null);
+  const taskRefs = useRef({});
+
+  useEffect(() => { const t=setInterval(()=>setNow(new Date()),30000); return()=>clearInterval(t); }, []);
+
+  const completeTask = (taskId, e) => {
+    const task = state.tasks.find(t=>t.id===taskId);
+    if (!task||!isTaskUnlocked(task)) return;
+
+    // Get button position for confetti
+    const rect = e.currentTarget.getBoundingClientRect();
+    const containerRect = e.currentTarget.closest('.px-4').getBoundingClientRect();
+    setConfettiAt({ x: rect.left - containerRect.left + rect.width/2, y: rect.top - containerRect.top + rect.height/2, id: taskId });
+
+    playSound('check');
+    const newTasks = state.tasks.map(t=>t.id===taskId?{...t,done:true}:t);
+    const ns = { ...state, tasks:newTasks, gachaQueue:state.gachaQueue+(task.gachaBonus||1) };
+    setState(ns); saveState(ns);
+    setPopup(taskId);
+    setTimeout(()=>{ setPopup(null); setConfettiAt(null); }, 1500);
+
+    if (checkBattleTrigger()) {
+      recordBattleTrigger();
+      setTimeout(() => {
+        const e = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
+        setBattle({ ...e, maxHp: e.hp });
+      }, 1800);
+    }
+  };
+
+  const startEdit = (task) => { setEditingId(task.id); setEditText(task.text); setEditHour(task.unlockHour); };
+  const saveEdit = () => {
+    if(!editText.trim()) return;
+    const newTasks=state.tasks.map(t=>t.id===editingId?{...t,text:editText.trim(),unlockHour:editHour}:t);
+    const ns={...state,tasks:newTasks}; setState(ns); saveState(ns); setEditingId(null);
+  };
+
+  const unlockedTasks = state.tasks.filter(t=>isTaskUnlocked(t));
+  const lockedTasks = state.tasks.filter(t=>!isTaskUnlocked(t));
+  const completedCount = state.tasks.filter(t=>t.done).length;
+  const allDone = state.tasks.every(t=>t.done);
+  const nextLocked = lockedTasks[0]||null;
+  const prevAllDone = useRef(false);
+  useEffect(() => {
+    if (allDone && !prevAllDone.current) {
+      playSound('all-done');
+      if (!state.allClearBonusClaimed) {
+        const ownedIds = new Set(state.collection);
+        const unowned = ALL_CARDS.filter(c => !ownedIds.has(c.id));
+        const pool = unowned.length >= 3 ? unowned : ALL_CARDS;
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        setTimeout(() => setAllClearChoices(shuffled.slice(0, 3)), 1000);
+      }
+    }
+    prevAllDone.current = allDone;
+  }, [allDone]);
+
+  const claimAllClearBonus = (card) => {
+    const ns = {
+      ...state,
+      collection: [...state.collection, card.id],
+      history: { ...state.history, cards: [...state.history.cards, card.id] },
+      allClearBonusClaimed: true,
+    };
+    setState(ns); saveState(ns);
+    setAllClearChoices(null);
+    playSound('legendary-reveal');
+  };
+
+  return (
+    <div className="px-4 pt-6 pb-28 relative">
+      {allClearChoices && <AllClearBonusModal choices={allClearChoices} onSelect={claimAllClearBonus} />}
+      {/* Confetti overlay */}
+      {confettiAt && <ConfettiEffect active={true} x={confettiAt.x+'px'} y={confettiAt.y+'px'} count={30} />}
+
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-black">今日のクエスト</h1>
+          <p className="text-xs text-purple-300/70 mt-0.5">{completedCount}/{unlockedTasks.length} 完了</p>
+        </div>
+        {state.gachaQueue > 0 && (
+          <button onClick={()=>setTab('gacha')}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-pink-600 to-purple-600 px-3 py-1.5 rounded-full text-sm font-bold animate-pulse">
+            🎰 ×{state.gachaQueue}
+          </button>
+        )}
+      </div>
+
+      <div className="w-full h-2 bg-white/10 rounded-full mb-6 overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full transition-all duration-500"
+          style={{width:`${(completedCount/state.tasks.length)*100}%`}}/>
+      </div>
+
+      <div className="space-y-3">
+        {unlockedTasks.map(task=>(
+          <div key={task.id}
+            className={`relative rounded-2xl p-4 transition-all duration-300 ${
+              task.done?'bg-emerald-900/30 border border-emerald-500/30':'bg-white/5 border border-white/10 hover:border-purple-500/40'
+            } ${popup===task.id?'task-complete-pop':''}`}>
+            {popup===task.id && (
+              <span className="float-up absolute -top-2 right-4 text-yellow-400 font-black text-xl z-10">
+                🎰 ガチャGET!
+              </span>
+            )}
+            <div className="flex items-center gap-3">
+              {task.done ? (
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 13l4 4L19 7" style={{strokeDasharray:30, animation:'checkmark-draw 0.5s ease-out forwards'}}/>
+                  </svg>
+                </div>
+              ) : (
+                <button onClick={(e)=>completeTask(task.id,e)}
+                  className="relative w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-xl hover:bg-purple-500/40 active:scale-75 transition-all overflow-hidden group">
+                  <span className="group-active:scale-150 transition-transform">⬜</span>
+                </button>
+              )}
+              <div className="flex-1 min-w-0">
+                {editingId===task.id ? (
+                  <div className="space-y-2">
+                    <input value={editText} onChange={e=>setEditText(e.target.value)}
+                      className="w-full bg-white/10 rounded-lg px-2 py-1 text-sm outline-none border border-purple-500/40"
+                      autoFocus onKeyDown={e=>e.key==='Enter'&&saveEdit()}/>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] opacity-40">解放</span>
+                      <select value={editHour} onChange={e=>setEditHour(parseInt(e.target.value))}
+                        className="bg-white/10 rounded px-1.5 py-0.5 text-xs outline-none border border-purple-500/40">
+                        {Array.from({length:15},(_,i)=>i+6).map(h=>(
+                          <option key={h} value={h} className="bg-gray-900">{h}:00</option>
+                        ))}
+                      </select>
+                      <button onClick={saveEdit} className="text-emerald-400 text-sm font-bold ml-auto">保存</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className={`font-bold text-sm ${task.done?'line-through opacity-50':''}`}>{task.text}</p>
+                    <p className="text-xs opacity-40 mt-0.5">{task.genre} · {task.unlockHour}:{String(task.unlockMinute||0).padStart(2,'0')}〜</p>
+                  </>
+                )}
+              </div>
+              {!task.done&&!editingId&&editMode&&(
+                <button onClick={()=>startEdit(task)} className="text-xs text-purple-300/60 px-2">✏️</button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {lockedTasks.length>0 && !editMode && (
+        <div className="mt-4 text-center text-xs text-purple-400/40">
+          まだ見えないクエストが {lockedTasks.length} 個...
+        </div>
+      )}
+
+      <button onClick={()=>setEditMode(!editMode)}
+        className="mt-4 text-xs text-purple-400/50 w-full text-center py-1">
+        {editMode?'編集おわり':'タスクを編集する'}
+      </button>
+
+      {allDone && (
+        <div className="mt-6 text-center p-4 rounded-2xl bg-gradient-to-r from-yellow-900/30 to-amber-900/20 border border-yellow-500/30">
+          <p className="text-2xl mb-1">🎊</p>
+          <p className="font-black text-yellow-300">全クエスト達成!</p>
+        </div>
+      )}
+
+      {(() => {
+        const today = new Date().toISOString().slice(0,10);
+        const defeated = localStorage.getItem('mc-spring-boss-2026-03-22') === 'true';
+        if (today !== '2026-03-22' || defeated) return null;
+        return (
+          <button onClick={() => setBattle({...SPRING_BOSS})}
+            className="mt-6 w-full py-4 rounded-2xl font-black text-lg text-white active:scale-95 transition-all"
+            style={{background:'linear-gradient(135deg,#7c3aed,#dc2626,#7c3aed)',backgroundSize:'200%',animation:'five-star-bg 3s ease infinite',boxShadow:'0 0 30px rgba(220,38,38,0.5),0 0 60px rgba(124,58,237,0.3)'}}>
+            👿 連休最終日ボスに挑戦！<br/>
+            <span className="text-sm font-bold opacity-80">今日だけ！倒すと残り全カードゲット！</span>
+          </button>
+        );
+      })()}
+
+      {!allDone&&nextLocked&&unlockedTasks.every(t=>t.done)&&(
+        <div className="mt-6 text-center p-4 rounded-2xl bg-purple-900/20 border border-purple-500/20">
+          <p className="text-lg mb-1">⏳</p>
+          <p className="font-bold text-purple-300 text-sm">次のクエストは {nextLocked.unlockHour}:{String(nextLocked.unlockMinute||0).padStart(2,'0')} に解放!</p>
+          <p className="text-xs text-purple-400/50 mt-1">あと{formatCountdown(getMinutesUntilUnlock(nextLocked))}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ========== GACHA SCREEN ==========
+function GachaScreen({ state, setState }) {
+  const [phase, setPhase] = useState('idle'); // idle | shake1 | shake2 | shake3 | burst | result
+  const [result, setResult] = useState(null);
+  const [flipped, setFlipped] = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
+  const [showSparkles, setShowSparkles] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const gachaResultRef = useRef(null);
+
+  const canPull = state.gachaQueue > 0;
+
+  const doGacha = () => {
+    if (!canPull) return;
+    setFlipped(false); setShowFlash(false); setShowSparkles(false); setShowConfetti(false);
+
+    const gachaResult = rollGacha(state.rewardCooldowns, state.rewardObtained, state.gachaTotal, state.rareCardTicket);
+    gachaResultRef.current = gachaResult;
+
+    // 3-stage shake escalation
+    playSound('gacha-shake1');
+    setPhase('shake1');
+    setTimeout(() => { playSound('gacha-shake2'); setPhase('shake2'); }, 600);
+    setTimeout(() => { playSound('gacha-shake3'); setPhase('shake3'); }, 1200);
+    setTimeout(() => {
+      // Flash!
+      playSound('gacha-burst');
+      setShowFlash(true);
+      setPhase('burst');
+      setTimeout(() => setShowFlash(false), 500);
+    }, 1800);
+    setTimeout(() => {
+      setResult(gachaResult);
+      setPhase('result');
+
+      // Update state
+      const newCollection = [...state.collection];
+      const newHistory = { cards:[...state.history.cards], rewards:[...state.history.rewards] };
+      const newRewardCooldowns = { ...state.rewardCooldowns };
+      const newRewardObtained = { ...state.rewardObtained };
+      const newGachaTotal = state.gachaTotal + 1;
+      let newRareCardTicket = state.rareCardTicket;
+      if (gachaResult.type==='card') {
+        newCollection.push(gachaResult.card.id);
+        newHistory.cards.push(gachaResult.card.id);
+        if (newRareCardTicket) newRareCardTicket = false;
+      } else {
+        newHistory.rewards.push(gachaResult.reward.id);
+        if (gachaResult.reward.cooldown) newRewardCooldowns[gachaResult.reward.id] = newGachaTotal;
+        if (gachaResult.reward.oneTime) newRewardObtained[gachaResult.reward.id] = true;
+        if (gachaResult.reward.specialType === 'rareTicket') newRareCardTicket = true;
+      }
+      const ns = { ...state, collection:newCollection, history:newHistory, rewardCooldowns:newRewardCooldowns, rewardObtained:newRewardObtained, gachaTotal:newGachaTotal, rareCardTicket:newRareCardTicket, gachaQueue:state.gachaQueue-1 };
+      setState(ns); saveState(ns);
+    }, 2200);
+  };
+
+  const handleFlip = () => {
+    if (flipped) return;
+    playSound('card-flip');
+    setFlipped(true);
+    setShowSparkles(true);
+    // Confetti for rewards or rare cards
+    const r = result;
+    if (r.type==='reward' || (r.type==='card' && r.card.rarity >= 3)) {
+      setShowConfetti(true);
+    }
+    // Sound by rarity / type
+    setTimeout(() => {
+      if (r.type === 'reward') playSound('reward-reveal');
+      else if (r.type === 'card' && r.card.rarity >= 4) playSound('legendary-reveal');
+      else if (r.type === 'card' && r.card.rarity >= 3) playSound('rare-reveal');
+    }, 300);
+    // Extra flash for legendary
+    if (r.type==='card' && r.card.rarity >= 4) {
+      setShowFlash(true);
+      setTimeout(() => setShowFlash(false), 400);
+    }
+  };
+
+  const reset = () => {
+    setPhase('idle'); setResult(null); setFlipped(false);
+    setShowFlash(false); setShowSparkles(false); setShowConfetti(false);
+    gachaResultRef.current = null;
+  };
+
+  const shakeClass = phase==='shake1'?'gacha-shake-1':phase==='shake2'?'gacha-shake-2':phase==='shake3'?'gacha-shake-3':'';
+  const isShaking = ['shake1','shake2','shake3'].includes(phase);
+  const machineGlow = phase==='shake3' ? '0 0 40px rgba(168,85,247,0.6), 0 0 80px rgba(219,39,119,0.4)' :
+                      phase==='shake2' ? '0 0 25px rgba(168,85,247,0.4)' : '0 0 15px rgba(168,85,247,0.3)';
+
+  return (
+    <div className="px-4 pt-6 pb-28 flex flex-col items-center relative">
+      {showFlash && <ScreenFlash color={result?.type==='reward'?'#fbbf24':'#a855f7'} />}
+
+      <div className="flex items-center justify-between w-full mb-6">
+        <h1 className="text-xl font-black">ガチャ</h1>
+        <div className="text-sm font-bold text-purple-300">
+          残り <span className="text-xl text-white">{state.gachaQueue}</span> 回
+        </div>
+      </div>
+
+      {phase==='idle' && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 mt-8 w-full">
+          <div className="w-36 h-36 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-7xl shadow-2xl shadow-purple-500/30 transition-all">
+            🎰
+          </div>
+
+          {state.rareCardTicket && (
+            <div className="flex items-center gap-2 bg-yellow-900/30 border border-yellow-500/40 rounded-xl px-4 py-2 text-sm w-full max-w-xs">
+              <span>✨</span>
+              <div>
+                <p className="text-yellow-300 font-bold text-sm">レアカードチケット有効!</p>
+                <p className="text-yellow-400/60 text-xs">次のカードは★4以上確定</p>
+              </div>
+            </div>
+          )}
+          <button onClick={doGacha} disabled={!canPull}
+            className={`w-full max-w-xs py-4 rounded-2xl font-bold text-lg transition-all active:scale-90 ${
+              canPull?'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg btn-glow':'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+            }`}>
+            {canPull?'ガチャを回す!':'タスクをクリアしよう!'}
+          </button>
+
+          <p className="text-xs text-purple-300/40 text-center mt-2">何が出るかはお楽しみ...</p>
+        </div>
+      )}
+
+      {(isShaking||phase==='burst') && (
+        <div className="flex-1 flex flex-col items-center justify-center mt-16 relative">
+          <div className={`w-44 h-44 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-8xl transition-shadow duration-300 ${shakeClass}`}
+            style={{ boxShadow: machineGlow }}>
+            🎰
+          </div>
+          {phase==='burst' && (
+            <div className="light-burst">
+              <div className="light-burst-circle" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.8) 0%, transparent 70%)' }} />
+            </div>
+          )}
+          {/* Energy particles during shake */}
+          {phase==='shake3' && (
+            <div className="absolute inset-0 pointer-events-none">
+              {Array.from({length:8},(_,i) => (
+                <div key={i} className="absolute w-2 h-2 rounded-full bg-purple-400"
+                  style={{
+                    left: `${50 + Math.cos(i*45*Math.PI/180)*60}%`,
+                    top: `${50 + Math.sin(i*45*Math.PI/180)*60}%`,
+                    animation: `sparkle 0.4s ease-in-out ${i*0.05}s infinite`,
+                  }}/>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {phase==='result' && result && (
+        <div className="flex-1 flex flex-col items-center gap-6 mt-8 relative">
+          {/* Sparkle ring */}
+          {showSparkles && <SparkleRing active={true} count={16} />}
+          {/* Confetti */}
+          {showConfetti && <ConfettiEffect active={true} x="50%" y="40%" count={40}
+            colors={result.type==='reward'?['#facc15','#f97316','#fbbf24','#fde047','#fb923c']:undefined} />}
+
+          {result.type==='card' ? (
+            <div className="card-flip w-44 h-60 card-entrance" onClick={handleFlip}>
+              <div className={`card-flip-inner ${flipped?'flipped':''}`}>
+                <div className="card-back rounded-xl bg-gradient-to-br from-purple-700 via-indigo-800 to-purple-900 border-2 border-purple-400/40 flex items-center justify-center cursor-pointer">
+                  <div className="text-center">
+                    <span className="text-6xl block mb-2">🃏</span>
+                    <p className="text-sm text-purple-300/80 font-bold animate-pulse">タップで開く!</p>
+                  </div>
+                </div>
+                <div className={`card-front rarity-${result.card.rarity} flex flex-col items-center justify-center gap-2 relative overflow-hidden`}
+                  style={{background:RARITY_BG[result.card.rarity]}}>
+                  {result.card.rarity===5&&<div className="absolute inset-0 five-star-reveal opacity-30"/>}
+                  <span className="text-6xl relative z-10">{result.card.emoji}</span>
+                  <Stars rarity={result.card.rarity} size="text-xl"/>
+                  <span className="text-lg font-black text-center px-2 relative z-10">{result.card.name}</span>
+                  <span className="text-[10px] opacity-50">{result.card.type}/{RARITY_LABELS[result.card.rarity]}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card-flip w-44 h-60 card-entrance" onClick={handleFlip}>
+              <div className={`card-flip-inner ${flipped?'flipped':''}`}>
+                <div className="card-back rounded-xl bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 border-2 border-yellow-400/50 flex items-center justify-center cursor-pointer">
+                  <div className="text-center">
+                    <span className="text-6xl block mb-2">🎁</span>
+                    <p className="text-sm text-yellow-200/80 font-bold animate-pulse">タップで開く!</p>
+                  </div>
+                </div>
+                <div className="card-front rounded-xl bg-gradient-to-br from-amber-900 to-orange-900 border-2 border-yellow-400/60 flex flex-col items-center justify-center gap-3 reward-glow">
+                  <span className="text-7xl">{result.reward.emoji}</span>
+                  <span className="text-xl font-black text-yellow-200 text-center px-3">{result.reward.name}</span>
+                  <span className="text-sm text-yellow-400/80 font-bold">ごほうび GET!</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!flipped&&<p className="text-sm text-purple-300/60 animate-pulse mt-2">タップして開こう!</p>}
+
+          {flipped && (
+            <div className="flex flex-col gap-2 w-full max-w-xs mt-2">
+              {state.gachaQueue>0 && (
+                <button onClick={()=>{reset();setTimeout(doGacha,200);}}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-sm active:scale-95 transition-transform btn-glow">
+                  もう1回! (残り{state.gachaQueue}回)
+                </button>
+              )}
+              <button onClick={reset}
+                className="w-full py-3 rounded-xl bg-white/10 font-bold text-sm active:scale-95 transition-transform">
+                もどる
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ========== COLLECTION SCREEN ==========
+function CollectionScreen({ state }) {
+  const [selectedCard, setSelectedCard] = useState(null);
+  const collected = state.collection.length;
+  return (
+    <div className="px-4 pt-6 pb-28">
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-xl font-black">カード図鑑</h1>
+        <div className="text-sm font-bold"><span className="text-yellow-400">{collected}</span><span className="text-white/30"> / {ALL_CARDS.length}</span><span className="text-xs text-purple-300 ml-2">計{state.collection.length}枚</span></div>
+      </div>
+      <div className="w-full h-2 bg-white/10 rounded-full mb-6 overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full transition-all duration-500" style={{width:`${(collected/ALL_CARDS.length)*100}%`}}/>
+      </div>
+      <div className="grid grid-cols-4 gap-2.5">
+        {ALL_CARDS.map(card=>{
+          const owned=state.collection.includes(card.id);
+          return owned
+            ? <CardDisplay key={card.id} card={card} size="small" onClick={()=>setSelectedCard(card)}/>
+            : <CardDisplay key={card.id} card={card} size="small" silhouette onClick={()=>{}}/>;
+        })}
+      </div>
+      <div className="mt-6 bg-white/5 rounded-xl p-3">
+        <p className="text-xs font-bold mb-2 opacity-50">レアリティ別</p>
+        {[1,2,3,4,5].map(r=>{
+          const total=ALL_CARDS.filter(c=>c.rarity===r).length;
+          const got=ALL_CARDS.filter(c=>c.rarity===r&&state.collection.includes(c.id)).length;
+          return (
+            <div key={r} className="flex items-center gap-2 py-1">
+              <Stars rarity={r} size="text-xs"/>
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full rounded-full" style={{width:`${(got/total)*100}%`,background:RARITY_COLORS[r]}}/>
+              </div>
+              <span className="text-[10px] opacity-50 w-8 text-right">{got}/{total}</span>
+            </div>
+          );
+        })}
+      </div>
+      <CardModal card={selectedCard} isNew={selectedCard&&state.history.cards.includes(selectedCard.id)} onClose={()=>setSelectedCard(null)}/>
+    </div>
+  );
+}
+
+// ========== REVIEW SCREEN ==========
+function ReviewScreen({ state, setState }) {
+  const completedTasks=state.tasks.filter(t=>t.done).length;
+  const [comment, setComment] = useState(state.comment);
+  const saveComment=()=>{const ns={...state,comment};setState(ns);saveState(ns);};
+  const rewardSummary={};
+  state.history.rewards.forEach(id=>{rewardSummary[id]=(rewardSummary[id]||0)+1;});
+  const resetAll=()=>{
+    if(confirm('データをリセットしますか？（カードコレクションは残ります）')){
+      const ns={tasks:DEFAULT_TASKS,collection:state.collection,history:{cards:state.history.cards,rewards:[]},rewardCooldowns:{},rewardObtained:{},gachaTotal:state.gachaTotal,rareCardTicket:false,comment:'',gachaQueue:0};
+      setState(ns);saveState(ns);
+    }
+  };
+
+  return (
+    <div className="px-4 pt-6 pb-28">
+      <h1 className="text-xl font-black mb-6">ふりかえり</h1>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-emerald-900/30 border border-emerald-500/20 rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-emerald-400">{completedTasks}</p>
+          <p className="text-[10px] opacity-50 mt-1">クリアしたクエスト</p>
+        </div>
+        <div className="bg-purple-900/30 border border-purple-500/20 rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-purple-400">{state.history.cards.length}</p>
+          <p className="text-[10px] opacity-50 mt-1">ゲットしたカード</p>
+        </div>
+        <div className="bg-amber-900/30 border border-amber-500/20 rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-amber-400">{state.history.rewards.length}</p>
+          <p className="text-[10px] opacity-50 mt-1">ごほうび</p>
+        </div>
+      </div>
+      {state.history.cards.length>0&&(
+        <div className="mb-6">
+          <h2 className="text-sm font-bold mb-3 opacity-60">今日ゲットしたカード</h2>
+          <div className="flex gap-2 flex-wrap">
+            {[...new Set(state.history.cards)].map(id=>{const card=ALL_CARDS.find(c=>c.id===id);return card?<CardDisplay key={id} card={card} size="small"/>:null;})}
+          </div>
+        </div>
+      )}
+      {state.history.rewards.length>0&&(
+        <div className="mb-6">
+          <h2 className="text-sm font-bold mb-3 opacity-60">今日のごほうび</h2>
+          <div className="space-y-2">
+            {Object.entries(rewardSummary).map(([id,count])=>{
+              const reward=REWARDS.find(r=>r.id===id); if(!reward)return null;
+              return (
+                <div key={id} className="flex items-center gap-3 bg-amber-900/20 border border-amber-500/20 rounded-xl p-3">
+                  <span className="text-2xl">{reward.emoji}</span>
+                  <span className="font-bold text-sm">{reward.name}</span>
+                  {count>1&&<span className="text-xs text-amber-400 ml-auto">×{count}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      <div className="mb-6">
+        <h2 className="text-sm font-bold mb-2 opacity-60">おうちの人からひとこと</h2>
+        <textarea value={comment} onChange={e=>setComment(e.target.value)} onBlur={saveComment}
+          placeholder="今日もがんばったね！"
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm outline-none resize-none h-24 placeholder:text-white/20 focus:border-purple-500/40"/>
+      </div>
+      <div className="bg-white/5 rounded-xl p-4 mb-6">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-bold">カード図鑑</span>
+          <span className="text-sm"><span className="text-yellow-400 font-bold">{new Set(state.collection).size}</span><span className="opacity-30"> / {ALL_CARDS.length}</span><span className="text-xs text-purple-300 ml-1">（計{state.collection.length}枚）</span></span>
+        </div>
+        <div className="w-full h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full transition-all" style={{width:`${(state.collection.length/ALL_CARDS.length)*100}%`}}/>
+        </div>
+      </div>
+      <button onClick={resetAll}
+        className="w-full py-2 rounded-xl bg-red-900/20 border border-red-500/20 text-red-400/60 text-xs active:scale-95 transition-transform">
+        今日のデータをリセット（カードは残る）
+      </button>
+    </div>
+  );
+}
+
+// ========== BATTLE MODAL ==========
+const DECK_MAX = 5;
+function BattleModal({ initEnemy, onClose, state, setState }) {
+  const [phase, setPhase] = useState('intro'); // intro | deck-select | battle | animating | win | lose
+  const [deck, setDeck] = useState([]);        // selected cards for battle
+  const [hand, setHand] = useState([]);        // remaining cards in hand during battle
+  const [enemy, setEnemy] = useState({ ...initEnemy });
+  const [playerHp, setPlayerHp] = useState(30);
+  const playerMaxHp = 30;
+  const [log, setLog] = useState('');
+  const [reward, setReward] = useState(null);
+  const [enemyShake, setEnemyShake] = useState(false);
+  const [playerShake, setPlayerShake] = useState(false);
+
+  // カードごとの所持数をカウント
+  const collectionCounts = {};
+  state.collection.forEach(id => { collectionCounts[id] = (collectionCounts[id] || 0) + 1; });
+  const uniqueCollectionCards = [...new Set(state.collection)].map(id => ALL_CARDS.find(c => c.id === id)).filter(Boolean);
+  // サポートカードは各1枚固定
+  const supportCounts = {};
+  SUPPORT_CARDS.forEach(c => { supportCounts[c.id] = 1; });
+  const allCards = [...SUPPORT_CARDS, ...uniqueCollectionCards];
+
+  // デッキ内の各カードの枚数
+  const deckCounts = {};
+  deck.forEach(c => { deckCounts[c.id] = (deckCounts[c.id] || 0) + 1; });
+
+  // Intro → deck-select
+  useEffect(() => {
+    playSound('battle-appear');
+    const t = setTimeout(() => setPhase('deck-select'), 2200);
+    return () => clearTimeout(t);
+  }, []);
+
+  const addToDeck = (card) => {
+    if (deck.length >= DECK_MAX) return;
+    const owned = card.isSupport ? (supportCounts[card.id] || 1) : (collectionCounts[card.id] || 0);
+    const inDeck = deckCounts[card.id] || 0;
+    if (inDeck >= owned) return;
+    setDeck(prev => [...prev, card]);
+  };
+
+  const removeFromDeck = (card) => {
+    setDeck(prev => {
+      const idx = [...prev].map(c => c.id).lastIndexOf(card.id);
+      if (idx === -1) return prev;
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const toggleDeckCard = (card) => {
+    const owned = card.isSupport ? 1 : (collectionCounts[card.id] || 0);
+    const inDeck = deckCounts[card.id] || 0;
+    if (inDeck >= owned || deck.length >= DECK_MAX) {
+      removeFromDeck(card);
+    } else {
+      addToDeck(card);
+    }
+  };
+
+  const startBattle = () => {
+    const h = deck.length > 0 ? [...deck] : [];
+    setHand(h);
+    setLog(`${initEnemy.emoji} ${initEnemy.name} があらわれた！`);
+    setPhase('battle');
+  };
+
+  const applyReward = (r) => {
+    let ns = { ...state, gachaQueue: state.gachaQueue + (r.gacha || 0) };
+    if (r.cardId === 'all-remaining') {
+      const ownedIds = new Set(ns.collection);
+      const unowned = ALL_CARDS.filter(c => !ownedIds.has(c.id));
+      const newIds = unowned.map(c => c.id);
+      ns = { ...ns,
+        collection: [...new Set([...ns.collection, ...newIds])],
+        history: { ...ns.history, cards: [...ns.history.cards, ...newIds] }
+      };
+      localStorage.setItem('mc-spring-boss-2026-03-22', 'true');
+    } else if (r.cardId) {
+      ns = { ...ns, collection: [...ns.collection, r.cardId], history: { ...ns.history, cards: [...ns.history.cards, r.cardId] } };
+    }
+    setState(ns); saveState(ns);
+  };
+
+  const handleAttack = (card) => {
+    if (phase !== 'battle') return;
+    setPhase('animating');
+    const dmg = cardAttackPower(card);
+    const newEnemyHp = Math.max(0, enemy.hp - dmg);
+    setLog(`${card.emoji} ${card.name} で ${dmg} のダメージ！`);
+    playSound('battle-hit');
+    setEnemyShake(true); setTimeout(() => setEnemyShake(false), 400);
+    setEnemy(e => ({ ...e, hp: newEnemyHp }));
+    if (card.id !== 'bare') setHand(prev => prev.filter(c => c.id !== card.id));
+
+    if (newEnemyHp <= 0) {
+      setTimeout(() => {
+        playSound('battle-win');
+        const r = initEnemy.isFinalBoss
+          ? { type: 'all-remaining', cardId: 'all-remaining', gacha: 0 }
+          : { type: 'both', cardId: initEnemy.cardDrop, gacha: 1 };
+        setReward(r); applyReward(r);
+        setPhase('win');
+      }, 600);
+    } else {
+      setTimeout(() => {
+        const atkDmg = initEnemy.attack + Math.floor(Math.random() * 4);
+        const newPHp = Math.max(0, playerHp - atkDmg);
+        setLog(`${initEnemy.emoji} ${initEnemy.name} の こうげき！ ${atkDmg} のダメージ！`);
+        playSound('battle-enemy-hit');
+        setPlayerShake(true); setTimeout(() => setPlayerShake(false), 400);
+        setPlayerHp(newPHp);
+        if (newPHp <= 0) {
+          setTimeout(() => { playSound('battle-lose'); setPhase('lose'); }, 700);
+        } else {
+          setTimeout(() => setPhase('battle'), 900);
+        }
+      }, 800);
+    }
+  };
+
+  const enemyHpPct = Math.max(0, (enemy.hp / initEnemy.maxHp) * 100);
+  const playerHpPct = Math.max(0, (playerHp / playerMaxHp) * 100);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4 overflow-y-auto">
+
+      {/* INTRO */}
+      {phase === 'intro' && (
+        <div className="text-center">
+          <p className="text-8xl mb-6 animate-bounce">{initEnemy.emoji}</p>
+          <p className="text-2xl font-black text-red-400 animate-pulse">⚔️ てきが あらわれた！</p>
+          <p className="text-xl font-bold mt-3">{initEnemy.name}</p>
+        </div>
+      )}
+
+      {/* DECK SELECT */}
+      {phase === 'deck-select' && (
+        <div className="w-full max-w-sm flex flex-col gap-4">
+          <div className="text-center">
+            <p className="text-4xl mb-2">{initEnemy.emoji}</p>
+            <p className="font-black text-lg text-red-400">{initEnemy.name}</p>
+            <p className="text-xs opacity-50 mt-1">HP {initEnemy.maxHp} / こうげき {initEnemy.attack}</p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-3">
+            <div className="flex justify-between items-center mb-3">
+              <p className="text-sm font-bold">使うカードを選ぶ</p>
+              <p className={`text-sm font-black ${deck.length >= DECK_MAX ? 'text-yellow-400' : 'text-white/50'}`}>{deck.length} / {DECK_MAX}枚</p>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 max-h-52 overflow-y-auto">
+              {allCards.map(card => {
+                const owned = card.isSupport ? 1 : (collectionCounts[card.id] || 0);
+                const inDeck = deckCounts[card.id] || 0;
+                const isMaxed = inDeck >= owned;
+                const cantAdd = deck.length >= DECK_MAX && inDeck === 0;
+                return (
+                  <button key={card.id} onClick={() => toggleDeckCard(card)}
+                    className={`relative flex flex-col items-center gap-0.5 p-1.5 rounded-xl border text-center active:scale-90 transition-all ${inDeck > 0 ? 'border-yellow-400 bg-yellow-900/30' : card.isSupport ? 'border-green-500/30 bg-green-900/10 opacity-60' : `rarity-${card.rarity} bg-black/30 opacity-60`} ${cantAdd ? 'opacity-25 pointer-events-none' : ''}`}>
+                    <span className="text-xl">{card.emoji}</span>
+                    <span className="text-[9px] font-bold leading-tight line-clamp-1">{card.name}</span>
+                    <span className="text-[9px] text-yellow-400">⚔️{cardAttackPower(card)}</span>
+                    <span className="text-[9px] opacity-50">持{owned}枚</span>
+                    {inDeck > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 text-black rounded-full text-[9px] font-black flex items-center justify-center">{inDeck}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] opacity-30 mt-2 text-center">🟩 サポート（共通）　　その他：コレクション</p>
+          </div>
+          <button onClick={startBattle} disabled={deck.length === 0}
+            className={`w-full py-3 rounded-xl font-black text-lg active:scale-95 transition-all ${deck.length > 0 ? 'bg-red-500 text-white' : 'bg-white/10 text-white/30'}`}>
+            {deck.length > 0 ? `⚔️ ${deck.length}枚で戦う！` : 'カードを選んでください'}
+          </button>
+          <button onClick={() => { setDeck([]); startBattle(); }} className="text-xs opacity-30 text-center active:opacity-60">
+            素手で戦う（カードなし）
+          </button>
+        </div>
+      )}
+
+      {/* BATTLE */}
+      {(phase === 'battle' || phase === 'animating') && (
+        <div className="w-full max-w-sm flex flex-col gap-3">
+          <div className={`bg-red-900/30 border border-red-500/30 rounded-2xl p-4 text-center transition-transform ${enemyShake ? 'scale-95' : ''}`}>
+            <p className="text-5xl mb-1">{enemy.emoji}</p>
+            <p className="font-black text-lg">{initEnemy.name}</p>
+            <div className="w-full h-3 bg-white/10 rounded-full mt-2 overflow-hidden">
+              <div className="h-full bg-red-500 rounded-full transition-all duration-500" style={{width:`${enemyHpPct}%`}}/>
+            </div>
+            <p className="text-xs opacity-50 mt-1">HP {enemy.hp} / {initEnemy.maxHp}</p>
+          </div>
+
+          <p className="text-center text-sm font-bold text-yellow-300 min-h-[1.5rem]">{log}</p>
+
+          <div className={`flex items-center gap-3 bg-blue-900/20 border border-blue-500/20 rounded-xl p-3 transition-transform ${playerShake ? 'scale-95' : ''}`}>
+            <span className="text-2xl">🧑</span>
+            <div className="flex-1">
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-400 rounded-full transition-all duration-500" style={{width:`${playerHpPct}%`}}/>
+              </div>
+              <p className="text-xs opacity-50 mt-0.5">HP {playerHp} / {playerMaxHp}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs opacity-50 mb-2 px-1">手札 {hand.length}枚 — タップして攻撃！</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {hand.map(card => (
+                <button key={card.id} onClick={() => handleAttack(card)} disabled={phase !== 'battle'}
+                  className={`flex flex-col items-center gap-0.5 p-1.5 rounded-xl border text-center active:scale-90 transition-all ${card.isSupport ? 'border-green-500/40 bg-green-900/20' : `rarity-${card.rarity} bg-black/30`} ${phase !== 'battle' ? 'opacity-40' : ''}`}>
+                  <span className="text-xl">{card.emoji}</span>
+                  <span className="text-[9px] font-bold leading-tight line-clamp-1">{card.name}</span>
+                  <span className="text-[9px] text-yellow-400">⚔️{cardAttackPower(card)}</span>
+                </button>
+              ))}
+              <button onClick={() => handleAttack({ id: 'bare', name: 'すなどり', emoji: '✊', attack: 5 })} disabled={phase !== 'battle'}
+                className={`flex flex-col items-center gap-0.5 p-1.5 rounded-xl border border-white/20 bg-white/5 text-center active:scale-90 transition-all ${phase !== 'battle' ? 'opacity-40' : ''}`}>
+                <span className="text-xl">✊</span>
+                <span className="text-[9px] font-bold">すなどり</span>
+                <span className="text-[9px] text-yellow-400">⚔️5</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WIN */}
+      {phase === 'win' && (
+        <div className="text-center">
+          <p className="text-7xl mb-4">🏆</p>
+          <p className="text-2xl font-black text-yellow-400">しょうり！</p>
+          <p className="font-bold mt-2">{initEnemy.name} をたおした！</p>
+          {reward && (() => {
+            if (reward.cardId === 'all-remaining') {
+              return (
+                <div className="mt-4 bg-yellow-900/30 border border-yellow-500/30 rounded-xl p-4 flex flex-col gap-2">
+                  <p className="font-bold text-yellow-300 text-lg">🏆 連休コンプリート！</p>
+                  <p className="text-sm text-white/70">残り全カードをゲットした！</p>
+                </div>
+              );
+            }
+            const c = reward.cardId ? ALL_CARDS.find(x => x.id === reward.cardId) : null;
+            return (
+              <div className="mt-4 bg-yellow-900/30 border border-yellow-500/30 rounded-xl p-4 flex flex-col gap-2">
+                {c && <p className="font-bold text-purple-300 text-lg">{c.emoji}「{c.name}」が仲間になった！</p>}
+                {reward.gacha > 0 && <p className="font-bold text-yellow-300">🎰 ガチャ ×{reward.gacha} ゲット！</p>}
+              </div>
+            );
+          })()}
+          <button onClick={onClose} className="mt-6 px-8 py-3 rounded-xl bg-yellow-500 text-black font-black active:scale-95 transition-transform">とじる</button>
+        </div>
+      )}
+
+      {/* LOSE */}
+      {phase === 'lose' && (
+        <div className="text-center">
+          <p className="text-7xl mb-4">💫</p>
+          <p className="text-2xl font-black text-blue-400">やられた！</p>
+          <p className="font-bold mt-2 opacity-60">またチャレンジしよう！</p>
+          <button onClick={onClose} className="mt-6 px-8 py-3 rounded-xl bg-white/10 border border-white/20 font-bold active:scale-95 transition-transform">もどる</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ========== TAB BAR ==========
+function TabBar({ tab, setTab, gachaQueue }) {
+  const tabs = [
+    {id:'tasks',icon:'⚔️',label:'クエスト'},
+    {id:'gacha',icon:'🎰',label:'ガチャ',badge:gachaQueue},
+    {id:'collection',icon:'📖',label:'図鑑'},
+    {id:'review',icon:'📋',label:'ふりかえり'},
+  ];
+  return (
+    <div className="fixed bottom-0 left-0 right-0 tab-bar border-t border-white/10">
+      <div className="flex justify-around py-2 pb-[max(8px,env(safe-area-inset-bottom))]">
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            className={`relative flex flex-col items-center gap-0.5 px-4 py-1 rounded-xl transition-all ${tab===t.id?'text-purple-300':'text-white/30'}`}>
+            <span className="text-xl">{t.icon}</span>
+            <span className="text-[10px] font-bold">{t.label}</span>
+            {t.badge>0&&(
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white animate-bounce">
+                {t.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ========== APP ==========
+function App() {
+  const [state, setState] = useState(loadState);
+  const [tab, setTab] = useState('tasks');
+  const [battle, setBattle] = useState(null);
+  return (
+    <div className="max-w-md mx-auto min-h-dvh relative">
+      {tab==='tasks'&&<TaskScreen state={state} setState={setState} setTab={setTab} setBattle={setBattle}/>}
+      {tab==='gacha'&&<GachaScreen state={state} setState={setState}/>}
+      {tab==='collection'&&<CollectionScreen state={state}/>}
+      {tab==='review'&&<ReviewScreen state={state} setState={setState}/>}
+      <TabBar tab={tab} setTab={setTab} gachaQueue={state.gachaQueue}/>
+      {battle && <BattleModal initEnemy={battle} onClose={()=>setBattle(null)} state={state} setState={setState}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
