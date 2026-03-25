@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 地形図 — 国内外トレンド</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #282828;
+      --text: #e0e0e0;
+      --muted: #666;
+      --track-a: #4f9cf9;
+      --track-b: #a78bfa;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ---- Header ---- */
+    #header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+    #header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+    .header-stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .header-stats .stat strong { color: var(--text); }
+    .header-stats .stat-a strong { color: var(--track-a); }
+    .header-stats .stat-b strong { color: var(--track-b); }
+
+    /* ---- Main layout ---- */
+    #main {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    /* ---- Tabs ---- */
+    #tab-bar {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 10px 24px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active-a { color: var(--track-a); border-bottom-color: var(--track-a); }
+    .tab-btn.active-b { color: var(--track-b); border-bottom-color: var(--track-b); }
+
+    /* ---- Chart panels ---- */
+    #charts-area {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+
+    .track-panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .track-panel.hidden { display: none; }
+
+    .chart-div {
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ---- Side panel ---- */
+    #side-panel {
+      width: 300px;
+      min-width: 300px;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .panel-section-header {
+      padding: 10px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    #cluster-list {
+      overflow-y: auto;
+      max-height: 40%;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .cluster-item {
+      padding: 9px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: background 0.1s;
+    }
+    .cluster-item:hover { background: var(--surface2); }
+    .cluster-item.active {
+      background: var(--surface2);
+      border-left: 3px solid currentColor;
+      padding-left: 11px;
+    }
+    .c-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .c-track {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 8px;
+      border: 1px solid currentColor;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+    .c-label {
+      flex: 1;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .c-count { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+    /* ---- Post list ---- */
+    #post-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+    .post-item {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .post-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+    .post-author { font-size: 12px; font-weight: 600; color: var(--track-a); }
+    .post-author.b { color: var(--track-b); }
+    .post-stats { font-size: 11px; color: var(--muted); }
+    .post-text {
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 5px;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .post-url a {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .post-url a:hover { color: var(--text); }
+    #post-placeholder {
+      padding: 20px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <h1>AI 地形図 — 国内外トレンド</h1>
+  <div class="header-stats">
+    <span class="stat">実行日時: <strong id="run-at">—</strong></span>
+    <span class="stat stat-a">海外 (en): <strong id="count-a">—</strong> posts / <strong id="cluster-a">—</strong> clusters</span>
+    <span class="stat stat-b">国内 (ja): <strong id="count-b">—</strong> posts / <strong id="cluster-b">—</strong> clusters</span>
+  </div>
+</div>
+
+<div id="tab-bar">
+  <button class="tab-btn active-a" data-track="en">海外 (English)</button>
+  <button class="tab-btn" data-track="ja">国内 (日本語)</button>
+</div>
+
+<div id="main">
+  <div id="charts-area">
+    <div class="track-panel" id="panel-a">
+      <div id="chart-a" class="chart-div"></div>
+    </div>
+    <div class="track-panel hidden" id="panel-b">
+      <div id="chart-b" class="chart-div"></div>
+    </div>
+  </div>
+
+  <div id="side-panel">
+    <div class="panel-section-header">クラスタ一覧</div>
+    <div id="cluster-list"></div>
+    <div class="panel-section-header" id="post-list-header">ポスト一覧</div>
+    <div id="post-list">
+      <div id="post-placeholder">クラスタをクリックして表示</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================
+// Sample data
+// =====================
+const SAMPLE_DATA = {
+  run_at: "2026-03-24T09:00:00Z",
+  clusters: [
+    { cluster_id: "c1", track: "A", label: "Claude Code活用", topic: "claude_code", post_count: 3 },
+    { cluster_id: "c2", track: "A", label: "プロンプト設計", topic: "prompt_engineering", post_count: 2 },
+    { cluster_id: "c3", track: "A", label: "AIエージェント", topic: "ai_agent", post_count: 2 },
+    { cluster_id: "c4", track: "A", label: "自動化ノウハウ", topic: "workflow_automation", post_count: 4 },
+    { cluster_id: "c5", track: "B", label: "探究×AI実践", topic: "ai_inquiry", post_count: 3 },
+    { cluster_id: "c6", track: "B", label: "親子学習ツール", topic: "ai_parenting_tool", post_count: 2 },
+    { cluster_id: "c7", track: "B", label: "内発的動機", topic: "ai_learning_design", post_count: 4 },
+  ],
+  bubbles: [
+    // Track A — c1 Claude Code
+    { post_id:"p1", cluster_id:"c1", cluster_label:"Claude Code活用", track:"A", author:"user_alpha", text:"Claude Codeで社内ドキュメント整理を自動化。週3時間削減できた。プロジェクトごとにCLAUDE.mdを置くのがポイント。", text_full:"Claude Codeで社内ドキュメント整理を自動化。週3時間削減できた。プロジェクトごとにCLAUDE.mdを置くのがポイント。", likes:840, retweets:210, url:"https://x.com/example/1", x:1.2, y:0.5, size:1470 },
+    { post_id:"p2", cluster_id:"c1", cluster_label:"Claude Code活用", track:"A", author:"user_beta", text:"Claude CodeのSubagent機能を使ってコードレビューを並列化。PR1件のレビュー時間が8分→2分に。", text_full:"Claude CodeのSubagent機能を使ってコードレビューを並列化。PR1件のレビュー時間が8分→2分に。", likes:620, retweets:155, url:"https://x.com/example/2", x:1.5, y:0.9, size:1085 },
+    { post_id:"p3", cluster_id:"c1", cluster_label:"Claude Code活用", track:"A", author:"user_gamma", text:"CLAUDE.mdに「絵文字禁止」「コメントは日本語」などのルールを書いておくと一貫性が保てる。地味に効く。", text_full:"CLAUDE.mdに「絵文字禁止」「コメントは日本語」などのルールを書いておくと一貫性が保てる。地味に効く。", likes:430, retweets:98, url:"https://x.com/example/3", x:0.9, y:1.3, size:724 },
+    // Track A — c2 プロンプト設計
+    { post_id:"p4", cluster_id:"c2", cluster_label:"プロンプト設計", track:"A", author:"user_delta", text:"Chain-of-Thoughtプロンプトの実験結果。ステップ指示を入れると正答率が15%上がった。コピペ用テンプレあり。", text_full:"Chain-of-Thoughtプロンプトの実験結果。ステップ指示を入れると正答率が15%上がった。コピペ用テンプレあり。", likes:1100, retweets:380, url:"https://x.com/example/4", x:-0.3, y:1.8, size:2240 },
+    { post_id:"p5", cluster_id:"c2", cluster_label:"プロンプト設計", track:"A", author:"user_epsilon", text:"Few-shot vs Zero-shot の使い分け指針まとめ。タスク複雑度×モデルサイズで決める2×2マトリクス。", text_full:"Few-shot vs Zero-shot の使い分け指針まとめ。タスク複雑度×モデルサイズで決める2×2マトリクス。", likes:670, retweets:180, url:"https://x.com/example/5", x:-0.7, y:1.4, size:1210 },
+    // Track A — c3 AIエージェント
+    { post_id:"p6", cluster_id:"c3", cluster_label:"AIエージェント", track:"A", author:"user_zeta", text:"AIエージェントのループ設計で気をつけること。終了条件を明示しないと無限ループになる。実装例付き。", text_full:"AIエージェントのループ設計で気をつけること。終了条件を明示しないと無限ループになる。実装例付き。", likes:520, retweets:130, url:"https://x.com/example/6", x:-1.4, y:0.6, size:910 },
+    { post_id:"p7", cluster_id:"c3", cluster_label:"AIエージェント", track:"A", author:"user_eta", text:"MCP（Model Context Protocol）を使ってSlackとNotionをClaudeから操作。セットアップ30分で済んだ。", text_full:"MCP（Model Context Protocol）を使ってSlackとNotionをClaudeから操作。セットアップ30分で済んだ。", likes:780, retweets:200, url:"https://x.com/example/7", x:-1.8, y:0.2, size:1380 },
+    // Track A — c4 自動化ノウハウ（大クラスタ）
+    { post_id:"p8",  cluster_id:"c4", cluster_label:"自動化ノウハウ", track:"A", author:"user_theta", text:"GitHub ActionsとClaudeを組み合わせてissue自動トリアージ。ラベル付けの精度が人間並み。", text_full:"GitHub ActionsとClaudeを組み合わせてissue自動トリアージ。ラベル付けの精度が人間並み。", likes:940, retweets:260, url:"https://x.com/example/8", x:0.2, y:-0.5, size:1720 },
+    { post_id:"p9",  cluster_id:"c4", cluster_label:"自動化ノウハウ", track:"A", author:"user_iota", text:"n8nとClaude APIを繋いでメール自動分類。月200通→手動対応が10通以下になった実例。", text_full:"n8nとClaude APIを繋いでメール自動分類。月200通→手動対応が10通以下になった実例。", likes:710, retweets:175, url:"https://x.com/example/9", x:0.7, y:-0.9, size:1235 },
+    { post_id:"p10", cluster_id:"c4", cluster_label:"自動化ノウハウ", track:"A", author:"user_kappa", text:"Notion + Claude APIで週次レポートを自動生成する方法。プロンプトはシンプルに保つのが鉄則。", text_full:"Notion + Claude APIで週次レポートを自動生成する方法。プロンプトはシンプルに保つのが鉄則。", likes:490, retweets:115, url:"https://x.com/example/10", x:-0.2, y:-1.1, size:835 },
+    { post_id:"p11", cluster_id:"c4", cluster_label:"自動化ノウハウ", track:"A", author:"user_lambda", text:"Zapier × Claude連携のベストプラクティス5選。Webhookの設計とエラーハンドリングが肝。", text_full:"Zapier × Claude連携のベストプラクティス5選。Webhookの設計とエラーハンドリングが肝。", likes:360, retweets:88, url:"https://x.com/example/11", x:0.5, y:-1.5, size:624 },
+
+    // Track B — c5 探究×AI実践
+    { post_id:"p12", cluster_id:"c5", cluster_label:"探究×AI実践", track:"B", author:"user_mu", text:"8歳の娘とClaudeで「なぜ空は青いの？」を探究。自分で仮説を立てて調べる癖がついてきた。", text_full:"8歳の娘とClaudeで「なぜ空は青いの？」を探究。自分で仮説を立てて調べる癖がついてきた。", likes:980, retweets:290, url:"https://x.com/example/12", x:1.1, y:0.4, size:1850 },
+    { post_id:"p13", cluster_id:"c5", cluster_label:"探究×AI実践", track:"B", author:"user_nu", text:"AIと子どもの問答が「答えを出す」より「問いを深める」ツールになっている。これが探究教育の本質かも。", text_full:"AIと子どもの問答が「答えを出す」より「問いを深める」ツールになっている。これが探究教育の本質かも。", likes:650, retweets:170, url:"https://x.com/example/13", x:1.5, y:0.8, size:1160 },
+    { post_id:"p14", cluster_id:"c5", cluster_label:"探究×AI実践", track:"B", author:"user_xi", text:"小学2年生の息子がClaudeに「恐竜はなぜ絶滅したの？」と毎日質問し続けて、自分で仮説ノートを作り始めた。", text_full:"小学2年生の息子がClaudeに「恐竜はなぜ絶滅したの？」と毎日質問し続けて、自分で仮説ノートを作り始めた。", likes:440, retweets:105, url:"https://x.com/example/14", x:0.8, y:1.2, size:755 },
+    // Track B — c6 親子学習ツール
+    { post_id:"p15", cluster_id:"c6", cluster_label:"親子学習ツール", track:"B", author:"user_omicron", text:"NotebookLMで子供の興味テーマの資料をまとめてあげると、自分でQ&Aして学ぶようになった。親の出番が減る。", text_full:"NotebookLMで子供の興味テーマの資料をまとめてあげると、自分でQ&Aして学ぶようになった。親の出番が減る。", likes:720, retweets:185, url:"https://x.com/example/15", x:-0.5, y:1.5, size:1275 },
+    { post_id:"p16", cluster_id:"c6", cluster_label:"親子学習ツール", track:"B", author:"user_pi", text:"ChatGPTの音声モードを子供の読み聞かせ後の対話に使っている。「もしこのお話に続きがあったら？」という問いが効果的。", text_full:"ChatGPTの音声モードを子供の読み聞かせ後の対話に使っている。「もしこのお話に続きがあったら？」という問いが効果的。", likes:530, retweets:130, url:"https://x.com/example/16", x:-0.9, y:1.0, size:920 },
+    // Track B — c7 内発的動機（大クラスタ）
+    { post_id:"p17", cluster_id:"c7", cluster_label:"内発的動機", track:"B", author:"user_rho", text:"AIを使った学習で大事なのは「自分が知りたいと思う問い」をAIにぶつけること。カリキュラム起点だと内発性が死ぬ。", text_full:"AIを使った学習で大事なのは「自分が知りたいと思う問い」をAIにぶつけること。カリキュラム起点だと内発性が死ぬ。", likes:1200, retweets:350, url:"https://x.com/example/17", x:-1.3, y:0.3, size:2250 },
+    { post_id:"p18", cluster_id:"c7", cluster_label:"内発的動機", track:"B", author:"user_sigma", text:"子供の「なんで？」をAIに聞かせる前に、まず自分の予想を言わせる。この1ステップで思考の質が変わる。", text_full:"子供の「なんで？」をAIに聞かせる前に、まず自分の予想を言わせる。この1ステップで思考の質が変わる。", likes:880, retweets:240, url:"https://x.com/example/18", x:-1.7, y:0.7, size:1600 },
+    { post_id:"p19", cluster_id:"c7", cluster_label:"内発的動機", track:"B", author:"user_tau", text:"AIに「答え」を求めず「一緒に考えてほしい」と言わせると、子供の思考が止まらない。プロンプト設計より問い設計が重要。", text_full:"AIに「答え」を求めず「一緒に考えてほしい」と言わせると、子供の思考が止まらない。プロンプト設計より問い設計が重要。", likes:660, retweets:155, url:"https://x.com/example/19", x:-1.1, y:-0.4, size:1125 },
+    { post_id:"p20", cluster_id:"c7", cluster_label:"内発的動機", track:"B", author:"user_upsilon", text:"共働き家庭でAIを使った子育てを1年続けた記録。一番変わったのは子供ではなく自分の質問力だった。", text_full:"共働き家庭でAIを使った子育てを1年続けた記録。一番変わったのは子供ではなく自分の質問力だった。", likes:490, retweets:120, url:"https://x.com/example/20", x:-1.5, y:-0.1, size:850 },
+  ]
+};
+
+// =====================
+// Palette
+// =====================
+const PALETTE = [
+  "#4f9cf9","#34d399","#fb923c","#38bdf8","#a3e635",
+  "#a78bfa","#e879f9","#f472b6","#facc15","#2dd4bf",
+];
+
+// =====================
+// State
+// =====================
+let _data = null;
+let _activeClusterId = null;
+
+// =====================
+// Utils
+// =====================
+function esc(s) {
+  return String(s ?? "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function hexRgba(hex, a) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// =====================
+// Convex Hull (Andrew's monotone chain)
+// =====================
+function convexHull(pts) {
+  if (pts.length < 3) return pts.slice();
+  const s = [...pts].sort((a,b) => a.x !== b.x ? a.x-b.x : a.y-b.y);
+  const cross = (o,a,b) => (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
+  const lo = [], hi = [];
+  for (const p of s) {
+    while (lo.length>=2 && cross(lo.at(-2),lo.at(-1),p)<=0) lo.pop();
+    lo.push(p);
+  }
+  for (const p of [...s].reverse()) {
+    while (hi.length>=2 && cross(hi.at(-2),hi.at(-1),p)<=0) hi.pop();
+    hi.push(p);
+  }
+  lo.pop(); hi.pop();
+  return [...lo,...hi];
+}
+
+// =====================
+// Blob path in data coords
+// =====================
+function blobPath(pts, cx, cy, pad) {
+  // Circle (bezier approximation) centered at (cx, cy) with radius r
+  function circlePath(x, y, r) {
+    const k = 0.5523;
+    return [
+      `M ${x},${y-r}`,
+      `C ${x+k*r},${y-r} ${x+r},${y-k*r} ${x+r},${y}`,
+      `C ${x+r},${y+k*r} ${x+k*r},${y+r} ${x},${y+r}`,
+      `C ${x-k*r},${y+r} ${x-r},${y+k*r} ${x-r},${y}`,
+      `C ${x-r},${y-k*r} ${x-k*r},${y-r} ${x},${y-r} Z`,
+    ].join(' ');
+  }
+
+  if (pts.length === 1) return circlePath(cx, cy, pad);
+
+  const hull = pts.length < 3 ? pts.slice() : convexHull(pts);
+
+  // Expand hull points outward from centroid
+  const exp = hull.map(p => {
+    const dx = p.x-cx, dy = p.y-cy;
+    const len = Math.hypot(dx,dy);
+    if (len < 1e-9) return { x: cx+pad, y: cy };
+    return { x: cx+(dx/len)*(len+pad), y: cy+(dy/len)*(len+pad) };
+  });
+
+  if (exp.length === 2) {
+    // Stadium: circle around midpoint large enough to contain both
+    const r = Math.hypot(exp[0].x-exp[1].x, exp[0].y-exp[1].y)/2 + pad*0.3;
+    const mx = (exp[0].x+exp[1].x)/2, my = (exp[0].y+exp[1].y)/2;
+    return circlePath(mx, my, r);
+  }
+
+  // Catmull-Rom spline through hull points → smooth closed path
+  const n = exp.length;
+  const parts = [`M ${exp[0].x},${exp[0].y}`];
+  for (let i=0; i<n; i++) {
+    const p0=exp[(i-1+n)%n], p1=exp[i], p2=exp[(i+1)%n], p3=exp[(i+2)%n];
+    const cp1x=p1.x+(p2.x-p0.x)/6, cp1y=p1.y+(p2.y-p0.y)/6;
+    const cp2x=p2.x-(p3.x-p1.x)/6, cp2y=p2.y-(p3.y-p1.y)/6;
+    parts.push(`C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`);
+  }
+  parts.push('Z');
+  return parts.join(' ');
+}
+
+// =====================
+// Init
+// =====================
+fetch('./viz_data.json')
+  .then(r => r.json())
+  .then(d => renderDashboard(d))
+  .catch(() => { console.warn('Using sample data'); renderDashboard(SAMPLE_DATA); });
+
+// =====================
+// Main render
+// =====================
+function renderDashboard(data) {
+  _data = data;
+
+  // Header
+  document.getElementById('run-at').textContent =
+    data.run_at ? new Date(data.run_at).toLocaleString('ja-JP') : '—';
+
+  const bubblesA = (data.bubbles||[]).filter(b=>b.track==='en');
+  const bubblesB = (data.bubbles||[]).filter(b=>b.track==='ja');
+  const clustersA = (data.clusters||[]).filter(c=>c.track==='en');
+  const clustersB = (data.clusters||[]).filter(c=>c.track==='ja');
+
+  document.getElementById('count-a').textContent = bubblesA.length;
+  document.getElementById('cluster-a').textContent = clustersA.length;
+  document.getElementById('count-b').textContent = bubblesB.length;
+  document.getElementById('cluster-b').textContent = clustersB.length;
+
+  // Cluster list (all)
+  renderClusterList(data.clusters || []);
+
+  // Charts
+  renderTrackChart('chart-a', 'en', bubblesA, clustersA);
+  renderTrackChart('chart-b', 'ja', bubblesB, clustersB);
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.track;
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.className = 'tab-btn';
+        if (b.dataset.track === t) b.classList.add(t === 'en' ? 'active-a' : 'active-b');
+      });
+      document.getElementById('panel-a').classList.toggle('hidden', t !== 'en');
+      document.getElementById('panel-b').classList.toggle('hidden', t !== 'ja');
+      setTimeout(() => Plotly.Plots.resize(t === 'en' ? 'chart-a' : 'chart-b'), 50);
+    });
+  });
+}
+
+// =====================
+// Track chart
+// =====================
+function renderTrackChart(divId, track, bubbles, clusters) {
+  if (!bubbles.length) return;
+
+  // Color map: assign palette index globally consistent across tracks
+  // Build from clusters list
+  const colorMap = {};
+  clusters.forEach((c, i) => { colorMap[c.cluster_id] = PALETTE[i % PALETTE.length]; });
+
+  // Group bubbles by cluster
+  const byCluster = {};
+  bubbles.forEach(b => {
+    if (!byCluster[b.cluster_id]) byCluster[b.cluster_id] = [];
+    byCluster[b.cluster_id].push(b);
+  });
+
+  // Data range for blob padding
+  const xs = bubbles.map(b=>b.x), ys = bubbles.map(b=>b.y);
+  const xRange = (Math.max(...xs)-Math.min(...xs)) || 2;
+  const yRange = (Math.max(...ys)-Math.min(...ys)) || 2;
+  const spread = Math.min(xRange, yRange);
+
+  // Size scaling
+  const sizes = bubbles.map(b=>b.size);
+  const sMin = Math.min(...sizes), sDiff = (Math.max(...sizes)-sMin)||1;
+  const scaleSize = s => 8 + ((s-sMin)/sDiff)*28;
+
+  const shapes = [];
+  const traces = [];
+  const annotations = [];
+
+  Object.entries(byCluster).forEach(([cid, pts]) => {
+    const color = colorMap[cid] || '#888';
+    const cx = mean(pts.map(p=>p.x));
+    const cy = mean(pts.map(p=>p.y));
+
+    // Size category
+    const n = pts.length;
+    const cat = n<=2 ? 'sm' : n<=5 ? 'md' : 'lg';
+    const padFactor  = { sm:0.15, md:0.22, lg:0.32 }[cat];
+    const fillOpac   = { sm:0.06, md:0.09, lg:0.13 }[cat];
+    const lineOpac   = { sm:0.28, md:0.40, lg:0.55 }[cat];
+    const lineWidth  = { sm:1.0,  md:1.5,  lg:2.0  }[cat];
+    const pad = padFactor * spread;
+
+    // Blob shape
+    shapes.push({
+      type: 'path',
+      xref: 'x', yref: 'y',
+      path: blobPath(pts, cx, cy, pad),
+      fillcolor: hexRgba(color, fillOpac),
+      line: { color: hexRgba(color, lineOpac), width: lineWidth },
+    });
+
+    // Connection lines: each post → centroid
+    if (pts.length > 1) {
+      const lx = [], ly = [];
+      pts.forEach(p => { lx.push(p.x, cx, null); ly.push(p.y, cy, null); });
+      traces.push({
+        type:'scatter', mode:'lines',
+        x: lx, y: ly,
+        line: { color: hexRgba(color, 0.22), width: 1 },
+        hoverinfo:'skip', showlegend:false,
+      });
+    }
+
+    // Centroid marker
+    const clLabel = clusters.find(c=>c.cluster_id===cid)?.label || cid;
+    traces.push({
+      type:'scatter', mode:'markers',
+      x:[cx], y:[cy],
+      marker:{
+        size: 12,
+        color: color,
+        symbol: 'circle',
+        opacity: 0.95,
+        line: { width:2, color:'rgba(255,255,255,0.25)' },
+      },
+      hovertemplate: `<b>${esc(clLabel)}</b><br>${n}件<extra></extra>`,
+      showlegend: false,
+    });
+
+    // Cluster label annotation
+    annotations.push({
+      x: cx, y: cy,
+      text: clLabel,
+      showarrow: false,
+      yshift: 14,
+      font: { size: 10, color: color, family:'-apple-system,sans-serif' },
+      bgcolor: 'rgba(13,13,13,0.75)',
+      borderpad: 2,
+    });
+
+    // Post scatter
+    traces.push({
+      type:'scatter', mode:'markers',
+      name: clLabel,
+      x: pts.map(p=>p.x),
+      y: pts.map(p=>p.y),
+      marker:{
+        size: pts.map(p=>scaleSize(p.size)),
+        color: color,
+        symbol: 'circle',
+        opacity: 0.88,
+        line:{ width:1.5, color:'rgba(255,255,255,0.2)' },
+      },
+      customdata: pts.map(p=>[p.cluster_label,p.author,p.text,p.likes,p.retweets,p.cluster_id,p.track]),
+      hovertemplate:[
+        '<b>%{customdata[0]}</b>',
+        '@%{customdata[1]}',
+        '%{customdata[2]}',
+        '♡ %{customdata[3]}  RT %{customdata[4]}',
+        '<extra></extra>',
+      ].join('<br>'),
+      showlegend: false,
+    });
+  });
+
+  const TRACK_COLOR = track==='en' ? '#4f9cf9' : '#a78bfa';
+
+  const layout = {
+    paper_bgcolor: '#0d0d0d',
+    plot_bgcolor: '#0d0d0d',
+    font: { color:'#e0e0e0', family:'-apple-system,sans-serif', size:11 },
+    xaxis: { visible:false, fixedrange:false },
+    yaxis: { visible:false, fixedrange:false, scaleanchor:'x', scaleratio:1 },
+    shapes,
+    annotations,
+    margin: { l:16, r:16, t:16, b:16 },
+    hoverlabel:{
+      bgcolor:'#1a1a1a', bordercolor:'#3a3a3a',
+      font:{ color:'#e0e0e0', size:12 }, align:'left',
+    },
+    uirevision: track,
+  };
+
+  const config = {
+    responsive:true,
+    displayModeBar:true,
+    displaylogo:false,
+    modeBarButtonsToRemove:['lasso2d','select2d','toImage'],
+  };
+
+  Plotly.react(divId, traces, layout, config);
+
+  // Click → select cluster in side panel
+  const div = document.getElementById(divId);
+  try { div.removeAllListeners('plotly_click'); } catch(e){}
+  div.on('plotly_click', evt => {
+    const pt = evt.points?.[0];
+    if (pt?.customdata?.[5]) selectCluster(pt.customdata[5]);
+  });
+}
+
+// =====================
+// Cluster list
+// =====================
+function renderClusterList(clusters) {
+  const container = document.getElementById('cluster-list');
+  container.innerHTML = '';
+  clusters.forEach((c, i) => {
+    const color = PALETTE[i % PALETTE.length];
+    const el = document.createElement('div');
+    el.className = 'cluster-item';
+    el.dataset.cid = c.cluster_id;
+    el.style.color = color;
+    el.innerHTML = `
+      <div class="c-dot" style="background:${color}"></div>
+      <span class="c-track" style="color:${color}">${c.track==='en'?'海外':'国内'}</span>
+      <span class="c-label" title="${esc(c.label)}">${esc(c.label)}</span>
+      <span class="c-count">${c.post_count}件</span>
+    `;
+    el.addEventListener('click', () => selectCluster(c.cluster_id));
+    container.appendChild(el);
+  });
+}
+
+function selectCluster(cid) {
+  _activeClusterId = cid;
+  document.querySelectorAll('.cluster-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.cid === cid);
+  });
+  const posts = (_data?.bubbles||[]).filter(b=>b.cluster_id===cid);
+  const cluster = (_data?.clusters||[]).find(c=>c.cluster_id===cid);
+  renderPostList(posts, cluster?.track);
+
+  // Scroll into view
+  const el = document.querySelector(`.cluster-item[data-cid="${cid}"]`);
+  el?.scrollIntoView({ block:'nearest' });
+}
+
+// =====================
+// Post list
+// =====================
+function renderPostList(posts, track) {
+  const container = document.getElementById('post-list');
+  container.innerHTML = '';
+  if (!posts.length) {
+    container.innerHTML = '<div id="post-placeholder">ポストがありません</div>';
+    return;
+  }
+  const authorClass = track==='B' ? 'post-author b' : 'post-author';
+  [...posts]
+    .sort((a,b)=>(b.likes+b.retweets*3)-(a.likes+a.retweets*3))
+    .forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'post-item';
+      el.innerHTML = `
+        <div class="post-meta">
+          <span class="${authorClass}">@${esc(p.author)}</span>
+          <span class="post-stats">♡ ${p.likes}  RT ${p.retweets}</span>
+        </div>
+        <div class="post-text">${esc(p.text_full||p.text)}</div>
+        ${p.url?`<div class="post-url"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.url)}</a></div>`:''}
+      `;
+      container.appendChild(el);
+    });
+}
+</script>
+</body>
+</html>
