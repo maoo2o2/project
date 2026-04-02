@@ -1190,10 +1190,24 @@ function toggleCardList(clusterId, btn) {
     return;
   }
 
-  // Build card list
+  // Build card list — 飼い主 / 専門家 セクション分け
   el.innerHTML = '';
-  DATA.participants.forEach(p => {
-    p.cards.filter(c => c.cluster === clusterId).forEach(card => {
+
+  const renderSection = (label, participants) => {
+    const cards = [];
+    participants.forEach(p => {
+      p.cards.filter(c => c.cluster === clusterId).forEach(card => {
+        cards.push({card, p});
+      });
+    });
+    if (cards.length === 0) return;
+
+    const labelDiv = document.createElement('div');
+    labelDiv.style.cssText = 'font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;padding:6px 0 4px;margin-top:4px;border-top:1px solid #eee;';
+    labelDiv.textContent = label;
+    el.appendChild(labelDiv);
+
+    cards.forEach(({card, p}) => {
       const div = document.createElement('div');
       div.className = 'mini-card';
       div.innerHTML = `
@@ -1205,7 +1219,10 @@ function toggleCardList(clusterId, btn) {
       `;
       el.appendChild(div);
     });
-  });
+  };
+
+  renderSection('飼い主', DATA.participants.filter(p => p.segment === '飼い主'));
+  renderSection('専門家', DATA.participants.filter(p => p.segment === '専門家'));
 
   el.style.display = 'flex';
   btn.textContent = '▲ カード一覧を閉じる';
