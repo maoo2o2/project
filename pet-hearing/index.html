@@ -22,7 +22,7 @@
   .header p { font-size: 13px; color: #777; margin-top: 4px; }
 
   /* KPI Cards */
-  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
   .kpi-card {
     background: #f5f5f3;
     border-radius: 8px;
@@ -99,6 +99,16 @@
     padding: 1px 7px; border-radius: 10px;
     background: #eee; color: #888; font-size: 10px;
   }
+
+  .chip-section-label {
+    width: 100%; font-size: 10px; font-weight: 700; color: #aaa;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 0; margin-top: 4px;
+  }
+  .chip-expert { border-color: #c8a84b; color: #7a6200; }
+  .chip-expert:hover { border-color: #7a6200; color: #7a6200; }
+  .chip-expert.active { border-color: #7a6200; color: #7a6200; font-weight: 700; }
+  .type-expert { background: #FEF9E7; color: #7a6200; }
 
   /* --- Tab 2: Bubble Chart --- */
   .bubble-wrap { position: relative; }
@@ -355,19 +365,14 @@
       <div class="kpi-value">6</div>
       <div class="kpi-sub">T1:2 / T2:3 / T3:1</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Top theme</div>
-      <div class="kpi-value" style="font-size:18px; margin-top:2px;">予防投資の実在</div>
-      <div class="kpi-sub">Rank 1 / 6</div>
-    </div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('participants')">Participants</button>
+    <button class="tab-btn" onclick="switchTab('clusters')">Clusters</button>
     <button class="tab-btn" onclick="switchTab('bubble')">Bubble chart</button>
     <button class="tab-btn" onclick="switchTab('heatmap')">Heatmap</button>
-    <button class="tab-btn" onclick="switchTab('clusters')">Clusters</button>
   </div>
 
   <!-- Tab: Participants -->
@@ -546,6 +551,42 @@ const DATA = {
         {id:"UC-13-5", cluster:"SC-1", clusterLabel:"変化の不可視",     text:"関節可視化サービスへの利用意向は低い（関節にピンとこない）",   credibility:"D", verificationDerived:true}
       ]
     },
+    { id:"P7",  name:"平田さん",       segment:"専門家", type:"Expert",  pet:"獣医師",
+      cards:[
+        {id:"UC-7-1", cluster:"SC-5", clusterLabel:"専門家不在の自己判断", text:"飼い主は自分の判断に自信がなく、信頼できる専門家を求めている（飼い主バイアスの問題提起）", credibility:"A", verificationDerived:false},
+        {id:"UC-7-2", cluster:"SC-1", clusterLabel:"変化の不可視",         text:"関節痛は慢性的に進行するため飼い主が気づきにくい。来院時にはすでに進行していることが多い", credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P8",  name:"中島さん（ぱれっと）", segment:"専門家", type:"Expert", pet:"ドッグケアラー",
+      cards:[
+        {id:"UC-8-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"未病期からケアで来店する飼い主が増えている。症状が出る前のケア意識が高まっている", credibility:"A", verificationDerived:false},
+        {id:"UC-8-3", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"毎日一緒にいると変化に気づきにくい。少しずつ変わるため当たり前になってしまう", credibility:"A", verificationDerived:false},
+        {id:"UC-8-4", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"未病期のケアが重要。早期介入で進行を遅らせられる。飼い主の意識変革が必要", credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P15", name:"大塚さん（獣医・PECO）", segment:"専門家", type:"Expert", pet:"獣医師",
+      cards:[
+        {id:"UC-15-1", cluster:"SC-2", clusterLabel:"効果の不可視",      text:"継続の鍵は効果の実感と目に見える変化。数値や変化が見えないとサプリ・ケアをやめてしまう", credibility:"A", verificationDerived:false},
+        {id:"UC-15-2", cluster:"SC-6", clusterLabel:"食事の正解不明",    text:"ウェット機能性フードはバリエーションが少ない。市場のニーズに製品が追いついていない", credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P16", name:"渡部さん（獣医・亀戸）", segment:"専門家", type:"Expert", pet:"獣医師",
+      cards:[
+        {id:"UC-16-1", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"関節相談は来院の約1割。飼い主の自発的な相談は少なく、ワクチン接種時に偶然発見されることが多い", credibility:"A", verificationDerived:false},
+        {id:"UC-16-2", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"飼い主が関節という言葉を自発的に使うことは少ない。問題を認識していない段階で来院している", credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P17", name:"石野さん（研究所）", segment:"専門家", type:"Expert", pet:"研究者",
+      cards:[
+        {id:"UC-17-1", cluster:"SC-4", clusterLabel:"食への愛情動機",    text:"関節単独より腸内・皮膚・関節の複合機能製品の方が飼い主に受け入れられやすい", credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P18", name:"村田先生（東大）", segment:"専門家", type:"Expert", pet:"研究者",
+      cards:[
+        {id:"UC-18-1", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"動画による関節炎分析AIは犬種多様性によりコストが高く、実用化に課題がある", credibility:"A", verificationDerived:false},
+        {id:"UC-18-2", cluster:"SC-6", clusterLabel:"食事の正解不明",    text:"フード市場はレッドオーシャン。差別化には機能性の科学的エビデンスが必要", credibility:"A", verificationDerived:false}
+      ]
+    },
     { id:"P14", name:"freddieさん",   segment:"飼い主", type:"Verify",  pet:"トイプードル3歳",
       cards:[
         {id:"UC-14-1", cluster:"SC-1", clusterLabel:"変化の不可視",     text:"先代犬の膝蓋骨脱臼+がん経験から関節リスクを強く意識",         credibility:"A", verificationDerived:false},
@@ -686,7 +727,7 @@ let clusterChartInstances = {};
 
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-    const names = ['participants','bubble','heatmap','clusters'];
+    const names = ['participants','clusters','bubble','heatmap'];
     btn.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -704,13 +745,36 @@ let selectedParticipant = 'P1';
 function renderParticipants() {
   const chipsEl = document.getElementById('participant-chips');
   chipsEl.innerHTML = '';
-  DATA.participants.forEach(p => {
+
+  const owners = DATA.participants.filter(p => p.segment === '飼い主');
+  const experts = DATA.participants.filter(p => p.segment === '専門家');
+
+  const labelEl = document.createElement('div');
+  labelEl.className = 'chip-section-label';
+  labelEl.textContent = '飼い主';
+  chipsEl.appendChild(labelEl);
+
+  owners.forEach(p => {
     const chip = document.createElement('button');
     chip.className = 'chip' + (p.id === selectedParticipant ? ' active' : '');
     chip.textContent = p.id + ' ' + p.name;
     chip.onclick = () => { selectedParticipant = p.id; renderParticipants(); };
     chipsEl.appendChild(chip);
   });
+
+  const labelEl2 = document.createElement('div');
+  labelEl2.className = 'chip-section-label';
+  labelEl2.textContent = '専門家';
+  chipsEl.appendChild(labelEl2);
+
+  experts.forEach(p => {
+    const chip = document.createElement('button');
+    chip.className = 'chip chip-expert' + (p.id === selectedParticipant ? ' active' : '');
+    chip.textContent = p.id + ' ' + p.name;
+    chip.onclick = () => { selectedParticipant = p.id; renderParticipants(); };
+    chipsEl.appendChild(chip);
+  });
+
   renderParticipantDetail();
 }
 
@@ -719,8 +783,8 @@ function renderParticipantDetail() {
   if (!p) return;
 
   const headerEl = document.getElementById('detail-header');
-  const typeClass = p.type === 'Verify' ? 'type-verify' : 'type-explore';
-  const typeLabel = p.type === 'Verify' ? '検証型' : '探索型';
+  const typeClass = p.type === 'Verify' ? 'type-verify' : p.type === 'Expert' ? 'type-expert' : 'type-explore';
+  const typeLabel = p.type === 'Verify' ? '検証型' : p.type === 'Expert' ? '有識者' : '探索型';
   headerEl.innerHTML = `
     <div>
       <div class="detail-name">${p.name}</div>
