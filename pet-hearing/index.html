@@ -368,7 +368,6 @@
     <button class="tab-btn" onclick="switchTab('bubble')">Bubble chart</button>
     <button class="tab-btn" onclick="switchTab('heatmap')">Heatmap</button>
     <button class="tab-btn" onclick="switchTab('clusters')">Clusters</button>
-    <button class="tab-btn" onclick="switchTab('summary')">Summary</button>
   </div>
 
   <!-- Tab: Participants -->
@@ -409,10 +408,6 @@
     <div class="cluster-grid" id="clusterGrid"></div>
   </div>
 
-  <!-- Tab: Summary -->
-  <div id="tab-summary" class="tab-content">
-    <div id="summaryContent"></div>
-  </div>
 
 </div>
 
@@ -691,7 +686,7 @@ let clusterChartInstances = {};
 
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-    const names = ['participants','bubble','heatmap','clusters','summary'];
+    const names = ['participants','bubble','heatmap','clusters'];
     btn.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -701,7 +696,6 @@ function switchTab(name) {
   if (name === 'bubble') initBubbleChart();
   if (name === 'heatmap') initHeatmap();
   if (name === 'clusters') initClusters();
-  if (name === 'summary') initSummary();
 }
 
 // ==================== TAB 1: PARTICIPANTS ====================
