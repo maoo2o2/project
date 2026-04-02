@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ペット事業 ユーザーヒアリング横断分析</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #FFFFFF;
+    color: #333333;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+  /* Header */
+  .header { margin-bottom: 24px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+  .header p { font-size: 13px; color: #777; margin-top: 4px; }
+
+  /* KPI Cards */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi-card {
+    background: #f5f5f3;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .kpi-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1.1; }
+  .kpi-sub { font-size: 11px; color: #999; margin-top: 4px; }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 2px solid #e8e8e8; margin-bottom: 20px; gap: 0; }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 10px 20px;
+    font-size: 14px; color: #777;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .tab-btn:hover { color: #333; }
+  .tab-btn.active { color: #C8102E; border-bottom-color: #C8102E; font-weight: 700; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* --- Tab 1: Participants --- */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .chip {
+    padding: 5px 12px; border-radius: 20px;
+    border: 1.5px solid #ddd; background: #fff;
+    cursor: pointer; font-size: 13px; color: #555;
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: #C8102E; color: #C8102E; }
+  .chip.active { border-color: #C8102E; color: #C8102E; font-weight: 700; }
+
+  .detail-panel { border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+  .detail-header {
+    background: #f9f9f7; padding: 14px 18px;
+    border-bottom: 1px solid #e8e8e8;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .detail-name { font-size: 16px; font-weight: 700; }
+  .detail-pet { font-size: 13px; color: #777; }
+  .type-badge {
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    margin-left: auto;
+  }
+  .type-explore { background: #EAF3FB; color: #185FA5; }
+  .type-verify { background: #FFF3E0; color: #854F0B; }
+
+  .cards-list { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .utterance-card {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 6px;
+  }
+  .cred-badge {
+    flex-shrink: 0; width: 22px; height: 22px;
+    border-radius: 4px; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .cred-A { background: #27AE60; }
+  .cred-B { background: #185FA5; }
+  .cred-C { background: #E67E22; }
+  .cred-D { background: #C8102E; }
+  .card-body { flex: 1; }
+  .card-cluster { font-size: 11px; color: #999; margin-bottom: 2px; }
+  .card-text { font-size: 13px; color: #333; }
+  .verification-badge {
+    margin-left: 8px;
+    padding: 1px 7px; border-radius: 10px;
+    background: #eee; color: #888; font-size: 10px;
+  }
+
+  /* --- Tab 2: Bubble Chart --- */
+  .bubble-wrap { position: relative; }
+  .bubble-canvas-container { position: relative; height: 450px; }
+  .bubble-legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin-top: 12px; font-size: 12px; color: #555;
+    align-items: center;
+  }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    display: inline-block; margin-right: 4px; vertical-align: middle;
+  }
+  .legend-dash {
+    width: 20px; height: 2px; border-top: 2px dashed #C8102E;
+    display: inline-block; margin-right: 4px; vertical-align: middle;
+  }
+  .bubble-tooltip {
+    position: fixed;
+    background: #fff; border: 1px solid #ddd; border-radius: 8px;
+    padding: 14px 16px; max-width: 280px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    font-size: 12px; line-height: 1.6;
+    pointer-events: none; z-index: 999; display: none;
+  }
+  .bubble-tooltip h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #1a1a1a; }
+  .bubble-tooltip .tt-row { color: #555; }
+  .bubble-tooltip .tt-quote {
+    margin-top: 8px; padding: 6px 8px;
+    background: #fafafa; border-left: 3px solid #C8102E;
+    font-style: italic; border-radius: 0 4px 4px 0; color: #444;
+  }
+
+  /* --- Tab 3: Heatmap --- */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+  }
+  .heatmap-table th, .heatmap-table td {
+    padding: 7px 10px; border: 1px solid #e8e8e8; text-align: center;
+  }
+  .heatmap-table th { background: #f5f5f3; font-weight: 600; }
+  .col-header { min-width: 100px; }
+  .col-header .tier-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; margin-right: 4px; vertical-align: middle;
+  }
+  .hypothesis-badge {
+    display: inline-block; margin-left: 4px;
+    padding: 1px 5px; border-radius: 8px;
+    background: #FDECEA; color: #C8102E; font-size: 10px; font-weight: 700;
+  }
+  .row-label { text-align: left; white-space: nowrap; font-weight: 600; }
+  .row-verify { border-left: 3px solid #854F0B !important; }
+  .hm-cell { cursor: default; transition: opacity 0.15s; }
+  .hm-cell:hover { opacity: 0.75; }
+  .heatmap-footer td { background: #f9f9f7; font-size: 11px; color: #666; font-weight: 600; }
+
+  .hm-tooltip {
+    position: fixed;
+    background: #1a1a1a; color: #fff;
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 11px; max-width: 240px; line-height: 1.5;
+    pointer-events: none; z-index: 999; display: none;
+  }
+
+  /* --- Tab 4: Clusters --- */
+  .cluster-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .cluster-card {
+    border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;
+  }
+  .cluster-card.hypothesis-card { border: 2px dashed #C8102E; }
+  .cluster-card-header {
+    padding: 12px 14px; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .tier-badge {
+    padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; color: #fff;
+  }
+  .tier-T1 { background: #27AE60; }
+  .tier-T2 { background: #185FA5; }
+  .tier-T3 { background: #C8A84B; }
+  .sc-id { font-size: 11px; color: #999; }
+  .cluster-name { font-size: 14px; font-weight: 700; flex: 1; }
+  .hypo-badge {
+    padding: 2px 7px; border-radius: 10px;
+    background: #FDECEA; color: #C8102E; font-size: 10px; font-weight: 700;
+  }
+  .verif-pct-badge {
+    margin-left: auto; padding: 2px 8px; border-radius: 10px;
+    background: #FFF3E0; color: #854F0B; font-size: 10px; font-weight: 600;
+  }
+  .cluster-card-body { padding: 12px 14px; }
+  .mention-bar-wrap { margin-bottom: 10px; }
+  .mention-bar-label { font-size: 11px; color: #777; margin-bottom: 4px; }
+  .mention-bar-track { height: 6px; background: #eee; border-radius: 3px; }
+  .mention-bar-fill { height: 6px; border-radius: 3px; }
+  .mini-chart-wrap { height: 50px; margin-bottom: 10px; }
+  .rep-quote {
+    border-left: 3px solid #C8102E; padding: 6px 10px;
+    font-style: italic; color: #555; font-size: 12px;
+    background: #fdfbfb; border-radius: 0 4px 4px 0;
+    margin-bottom: 8px;
+  }
+  .rep-quote-attr { font-size: 10px; color: #aaa; margin-top: 3px; font-style: normal; }
+  .cluster-desc { font-size: 12px; color: #555; margin-bottom: 8px; }
+  .hmw-box {
+    background: #EAF3FB; border-radius: 6px; padding: 8px 10px;
+    font-size: 11px; color: #185FA5; margin-bottom: 10px;
+  }
+  .hmw-box strong { display: block; margin-bottom: 2px; }
+  .expand-btn {
+    width: 100%; padding: 6px; border: 1px solid #ddd;
+    background: #fafafa; border-radius: 6px; cursor: pointer;
+    font-size: 11px; color: #777; text-align: center;
+    transition: background 0.15s;
+  }
+  .expand-btn:hover { background: #f0f0f0; }
+  .card-list-inner { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .mini-card {
+    padding: 6px 8px; background: #f9f9f7;
+    border: 1px solid #eee; border-radius: 5px;
+    display: flex; align-items: flex-start; gap: 7px;
+  }
+  .mini-cred {
+    flex-shrink: 0; width: 18px; height: 18px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mini-card-text { font-size: 11px; color: #444; flex: 1; }
+  .mini-card-by { font-size: 10px; color: #aaa; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>ペット事業 ユーザーヒアリング横断分析</h1>
+    <p>飼い主12名 / 全22件ヒアリング / 2025-11〜2026-03</p>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Interviews</div>
+      <div class="kpi-value">12</div>
+      <div class="kpi-sub">分析対象飼い主（DB全量22件中）<br>探索型: 8 / 検証型: 4</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Utterance cards</div>
+      <div class="kpi-value">78</div>
+      <div class="kpi-sub">A:60 B:10 C:4 D:5</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Clusters</div>
+      <div class="kpi-value">6</div>
+      <div class="kpi-sub">T1:2 / T2:3 / T3:1</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Top theme</div>
+      <div class="kpi-value" style="font-size:18px; margin-top:2px;">予防投資の実在</div>
+      <div class="kpi-sub">Rank 1 / 6</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('participants')">Participants</button>
+    <button class="tab-btn" onclick="switchTab('bubble')">Bubble chart</button>
+    <button class="tab-btn" onclick="switchTab('heatmap')">Heatmap</button>
+    <button class="tab-btn" onclick="switchTab('clusters')">Clusters</button>
+  </div>
+
+  <!-- Tab: Participants -->
+  <div id="tab-participants" class="tab-content active">
+    <div class="chip-row" id="participant-chips"></div>
+    <div class="detail-panel">
+      <div class="detail-header" id="detail-header"></div>
+      <div class="cards-list" id="detail-cards"></div>
+    </div>
+  </div>
+
+  <!-- Tab: Bubble Chart -->
+  <div id="tab-bubble" class="tab-content">
+    <div class="bubble-wrap">
+      <div class="bubble-canvas-container">
+        <canvas id="bubbleChart"></canvas>
+      </div>
+      <div class="bubble-legend">
+        <span><span class="legend-dot" style="background:#27AE60"></span>T1 — 実証済み課題</span>
+        <span><span class="legend-dot" style="background:#185FA5"></span>T2 — 有効課題</span>
+        <span><span class="legend-dot" style="background:#C8A84B"></span>T3 — 調査中</span>
+        <span><span class="legend-dash"></span>事前仮説テーマ (SC-1)</span>
+      </div>
+    </div>
+    <div id="bubbleTooltip" class="bubble-tooltip"></div>
+  </div>
+
+  <!-- Tab: Heatmap -->
+  <div id="tab-heatmap" class="tab-content">
+    <div class="heatmap-wrap">
+      <table class="heatmap-table" id="heatmapTable"></table>
+    </div>
+    <div id="hmTooltip" class="hm-tooltip"></div>
+  </div>
+
+  <!-- Tab: Clusters -->
+  <div id="tab-clusters" class="tab-content">
+    <div class="cluster-grid" id="clusterGrid"></div>
+  </div>
+
+</div>
+
+<script>
+// ==================== DATA ====================
+const DATA = {
+  summary: {
+    totalInterviews: 12,
+    exploreCount: 8,
+    verifyCount: 4,
+    dbTotal: 22,
+    totalCards: 78,
+    credDist: { A: 60, B: 10, C: 4, D: 5 },
+    clusterCount: 6,
+    t1Count: 2,
+    t2Count: 3,
+    t3Count: 1,
+    topTheme: "予防投資の実在"
+  },
+
+  participants: [
+    { id:"P1",  name:"ぱじさん",      segment:"飼い主", type:"Verify",  pet:"パグ5歳",
+      cards:[
+        {id:"UC-1-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"段差回避を自発的に実施（ソファ降り方の工夫）",                 credibility:"A", verificationDerived:false},
+        {id:"UC-1-2", cluster:"SC-5", clusterLabel:"専門家不在の自己判断", text:"AI信頼（個人獣医より集合データを信頼）",                       credibility:"A", verificationDerived:false},
+        {id:"UC-1-3", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"体重2kg増加時に血尿・皮膚荒れ。体重管理が最重要",              credibility:"A", verificationDerived:false},
+        {id:"UC-1-4", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"可視化サービスに前向き（デモ提示後）",                          credibility:"C", verificationDerived:true}
+      ]
+    },
+    { id:"P2",  name:"狩野さん2回目", segment:"飼い主", type:"Verify",  pet:"チワプー3歳",
+      cards:[
+        {id:"UC-2-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"フローリングに絨毯・ベッド階段設置済み（2回目以前から）",        credibility:"A", verificationDerived:false},
+        {id:"UC-2-2", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"健診で膝ポキポキ音を指摘された",                               credibility:"A", verificationDerived:false},
+        {id:"UC-2-3", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"右後ろ足かばいをデモ提示後に認識。本人は全く気づいていなかった", credibility:"C", verificationDerived:true},
+        {id:"UC-2-4", cluster:"SC-2", clusterLabel:"効果の不可視",      text:"涙やけ改善の食べ物が効いているか確認できない",                  credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P3",  name:"狩野さん初回",  segment:"飼い主", type:"Explore", pet:"チワプー3歳",
+      cards:[
+        {id:"UC-3-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"コラーゲンサプリ使用（脱臼予防目的）",                          credibility:"A", verificationDerived:false},
+        {id:"UC-3-2", cluster:"SC-4", clusterLabel:"食への愛情動機",    text:"ドライ+ウェット+手作り野菜（毎日炊飯器で煮込み）",              credibility:"A", verificationDerived:false},
+        {id:"UC-3-3", cluster:"SC-2", clusterLabel:"効果の不可視",      text:"手作りだけではタンパク質不足になるか不安",                      credibility:"A", verificationDerived:false},
+        {id:"UC-3-4", cluster:"SC-6", clusterLabel:"食事の正解不明",    text:"添加物への漠然とした不安",                                     credibility:"B", verificationDerived:false},
+        {id:"UC-3-5", cluster:"SC-6", clusterLabel:"食事の正解不明",    text:"手作りのタンパク質バランスへの不安",                           credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P4",  name:"横田さん2回目", segment:"飼い主", type:"Verify",  pet:"ダックス3歳",
+      cards:[
+        {id:"UC-4-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"犬の整体2回受診（ヘルニア予防目的）",                          credibility:"A", verificationDerived:false},
+        {id:"UC-4-2", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"整体師からガニ股・前のめり・後ろ足筋力弱を指摘",               credibility:"A", verificationDerived:false},
+        {id:"UC-4-3", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"年末嘔吐・下痢エピソード（リアルな課題）",                      credibility:"A", verificationDerived:false},
+        {id:"UC-4-4", cluster:"SC-2", clusterLabel:"効果の不可視",      text:"サプリが合っているか分からない",                               credibility:"A", verificationDerived:false},
+        {id:"UC-4-5", cluster:"SC-5", clusterLabel:"専門家不在の自己判断", text:"AI<トレーナーの信頼順位（自発的価値観）",                      credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P5",  name:"横田さん初回",  segment:"飼い主", type:"Explore", pet:"ダックス2歳",
+      cards:[
+        {id:"UC-5-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"グルコサミン+イミダゾールサプリ1年継続",                        credibility:"A", verificationDerived:false},
+        {id:"UC-5-2", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"ソファ低く変更・ベッド階段・着地マット設置",                    credibility:"A", verificationDerived:false},
+        {id:"UC-5-3", cluster:"SC-4", clusterLabel:"食への愛情動機",    text:"機能なし味変だけなら不要（機能性が必須条件）",                  credibility:"D", verificationDerived:false}
+      ]
+    },
+    { id:"P6",  name:"髙見さん",      segment:"飼い主", type:"Explore", pet:"チワワ10歳",
+      cards:[
+        {id:"UC-6-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"ドッグドック年1回継続（1歳から）",                              credibility:"A", verificationDerived:false},
+        {id:"UC-6-2", cluster:"SC-1", clusterLabel:"変化の不可視",      text:"足つぼだから背骨への影響が心配（自発的言及）",                  credibility:"A", verificationDerived:false},
+        {id:"UC-6-3", cluster:"SC-4", clusterLabel:"食への愛情動機",    text:"体重2.3kg厳密管理・シュウ酸カルシウム高→専用フード",           credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P9",  name:"奥野さん",      segment:"飼い主", type:"Explore", pet:"雑種（チン等）",
+      cards:[
+        {id:"UC-9-1", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"若い犬のガン死→定期健診開始",                                 credibility:"A", verificationDerived:false},
+        {id:"UC-9-2", cluster:"SC-3", clusterLabel:"予防投資の実在",    text:"階段カーペット設置（自発的環境整備）",                          credibility:"A", verificationDerived:false},
+        {id:"UC-9-3", cluster:"SC-4", clusterLabel:"食への愛情動機",    text:"茹で肉・野菜トッピング（健康意識・喜ぶ顔）",                   credibility:"A", verificationDerived:false},
+        {id:"UC-9-4", cluster:"SC-6", clusterLabel:"食事の正解不明",    text:"食材の正しい組み合わせへの不安",                               credibility:"B", verificationDerived:false}
+      ]
+    },
+    { id:"P10", name:"新堀さん",      segment:"飼い主", type:"Explore", pet:"チワワ14歳",
+      cards:[
+        {id:"UC-10-1", cluster:"SC-3", clusterLabel:"予防投資の実在",   text:"足がはずれる症状→専門病院→手術検討",                         credibility:"A", verificationDerived:false},
+        {id:"UC-10-2", cluster:"SC-4", clusterLabel:"食への愛情動機",   text:"人間と同じ食材で犬用料理への強い欲求",                         credibility:"A", verificationDerived:false},
+        {id:"UC-10-3", cluster:"SC-2", clusterLabel:"効果の不可視",     text:"関節サプリ調べたが未使用（効果イメージ湧かず）",               credibility:"D", verificationDerived:false},
+        {id:"UC-10-4", cluster:"SC-6", clusterLabel:"食事の正解不明",   text:"食育士資格取得を検討するほどの不安",                           credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P11", name:"中嶋さん",      segment:"飼い主", type:"Explore", pet:"ハンペン1歳",
+      cards:[
+        {id:"UC-11-1", cluster:"SC-4", clusterLabel:"食への愛情動機",   text:"豆腐・納豆・芋を週2-3回（喜ぶ顔が見たい）",                   credibility:"A", verificationDerived:false},
+        {id:"UC-11-2", cluster:"SC-4", clusterLabel:"食への愛情動機",   text:"食いつき一番重要。「俺が作った飯を一番食うなら作る」",         credibility:"A", verificationDerived:false},
+        {id:"UC-11-3", cluster:"SC-5", clusterLabel:"専門家不在の自己判断", text:"専門家監修情報を信頼（自発的価値観）",                       credibility:"A", verificationDerived:false},
+        {id:"UC-11-4", cluster:"SC-6", clusterLabel:"食事の正解不明",   text:"手作り困難（量・手間・栄養担保）",                             credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P12", name:"鋪田さん",      segment:"飼い主", type:"Explore", pet:"ダックス11歳",
+      cards:[
+        {id:"UC-12-1", cluster:"SC-3", clusterLabel:"予防投資の実在",   text:"ヘルニア既往→タイルカーペット全面敷き",                        credibility:"A", verificationDerived:false},
+        {id:"UC-12-2", cluster:"SC-4", clusterLabel:"食への愛情動機",   text:"罪悪感「同じものばかりでごめんね」",                           credibility:"A", verificationDerived:false},
+        {id:"UC-12-3", cluster:"SC-4", clusterLabel:"食への愛情動機",   text:"食いつき最重要。高くても美味しければ買う",                     credibility:"A", verificationDerived:false},
+        {id:"UC-12-4", cluster:"SC-6", clusterLabel:"食事の正解不明",   text:"理想：ワンパック総合栄養食ウェット（市場にない）",             credibility:"A", verificationDerived:false}
+      ]
+    },
+    { id:"P13", name:"黒沼さん",      segment:"飼い主", type:"Explore", pet:"ポメラニアン5歳",
+      cards:[
+        {id:"UC-13-1", cluster:"SC-2", clusterLabel:"効果の不可視",     text:"本当にこのフードで合っているのか分からない",                   credibility:"A", verificationDerived:false},
+        {id:"UC-13-2", cluster:"SC-6", clusterLabel:"食事の正解不明",   text:"2年間で複数フードを試し続けているが合うものが見つからない",    credibility:"A", verificationDerived:false},
+        {id:"UC-13-3", cluster:"SC-2", clusterLabel:"効果の不可視",     text:"MS Formsでうんちログを自作し食事内容と照合して獣医に共有",    credibility:"A", verificationDerived:false},
+        {id:"UC-13-4", cluster:"SC-6", clusterLabel:"食事の正解不明",   text:"慢性腸炎で下痢・血便。ステロイド服用中",                       credibility:"A", verificationDerived:false},
+        {id:"UC-13-5", cluster:"SC-1", clusterLabel:"変化の不可視",     text:"関節可視化サービスへの利用意向は低い（関節にピンとこない）",   credibility:"D", verificationDerived:true}
+      ]
+    },
+    { id:"P14", name:"freddieさん",   segment:"飼い主", type:"Verify",  pet:"トイプードル3歳",
+      cards:[
+        {id:"UC-14-1", cluster:"SC-1", clusterLabel:"変化の不可視",     text:"先代犬の膝蓋骨脱臼+がん経験から関節リスクを強く意識",         credibility:"A", verificationDerived:false},
+        {id:"UC-14-2", cluster:"SC-2", clusterLabel:"効果の不可視",     text:"これでいいのか悪いのか分からない不安の中で選んでいる",         credibility:"A", verificationDerived:false},
+        {id:"UC-14-3", cluster:"SC-3", clusterLabel:"予防投資の実在",   text:"月4万円の健康食投資（鹿の生肉・酵素フード等）",               credibility:"A", verificationDerived:false},
+        {id:"UC-14-4", cluster:"SC-4", clusterLabel:"食への愛情動機",   text:"鹿の生肉・酵素フード・ドッグヨガなど多様なケア実施",           credibility:"A", verificationDerived:false},
+        {id:"UC-14-5", cluster:"SC-5", clusterLabel:"専門家不在の自己判断", text:"先代犬のがん告知遅れ体験。「どの先生を信じていいんだよ」",  credibility:"A", verificationDerived:false},
+        {id:"UC-14-6", cluster:"SC-6", clusterLabel:"食事の正解不明",   text:"個体に合わせた給餌量が分からない（3〜5kgで同じ量はおかしい）", credibility:"A", verificationDerived:false}
+      ]
+    }
+  ],
+
+  clusters: [
+    {
+      id:"SC-1", label:"変化の不可視", tier:"T3", isHypothesis:true,
+      rank:6, n:4, frequency:33, depth:20, unmet:70,
+      credibility:{A:5, B:0, C:1, D:1},
+      fromVerification:3,
+      representativeQuote:{text:"毎日一緒にいると変化に気づきにくい", participant:"P8（中島さん）", credibility:"A"},
+      desc:"専門家が指摘するが飼い主自身の実感は薄い。関節痛の変化への自発的気づきが少ない。",
+      hmw:"どうすれば飼い主が日常の中で愛犬の関節変化に気づけるか？"
+    },
+    {
+      id:"SC-2", label:"効果の不可視", tier:"T2", isHypothesis:false,
+      rank:3, n:6, frequency:50, depth:30, unmet:65,
+      credibility:{A:5, B:1, C:0, D:1},
+      fromVerification:2,
+      representativeQuote:{text:"本当にこのフードで合っているのか分からない", participant:"P13（黒沼さん）", credibility:"A"},
+      desc:"ケアを続けているが本当に効いているか分からない不安。食事・サプリ・腸炎ケア全般にわたる普遍的課題。",
+      hmw:"どうすれば飼い主が行っているケアの効果を実感できるか？"
+    },
+    {
+      id:"SC-3", label:"予防投資の実在", tier:"T1", isHypothesis:false,
+      rank:1, n:9, frequency:75, depth:90, unmet:15,
+      credibility:{A:11, B:1, C:0, D:0},
+      fromVerification:2,
+      representativeQuote:{text:"グルコサミン+イミダゾールサプリを1年継続しています", participant:"P5（横田さん）", credibility:"A"},
+      desc:"費用・手間をかけた予防行動が習慣化している。サプリ・整体・健診・環境整備が全員に実在。",
+      hmw:"どうすれば既に予防投資をしている飼い主が、その効果をより確信しながら継続できるか？"
+    },
+    {
+      id:"SC-4", label:"食への愛情動機", tier:"T1", isHypothesis:false,
+      rank:2, n:7, frequency:58, depth:80, unmet:25,
+      credibility:{A:8, B:0, C:0, D:1},
+      fromVerification:1,
+      representativeQuote:{text:"同じものばかりでごめんね", participant:"P12（鋪田さん）", credibility:"A"},
+      desc:"食を通じた愛情表現・喜ぶ顔への強い動機。高くても美味しければ買う。機能性が必須条件。",
+      hmw:"どうすれば飼い主が愛犬に喜びと健康を同時に届けられる食事を選べるか？"
+    },
+    {
+      id:"SC-5", label:"専門家不在の自己判断", tier:"T2", isHypothesis:false,
+      rank:4, n:5, frequency:42, depth:50, unmet:50,
+      credibility:{A:4, B:0, C:0, D:0},
+      fromVerification:2,
+      representativeQuote:{text:"どの先生を信じていいんだよ", participant:"P14（freddieさん）", credibility:"A"},
+      desc:"信頼できる専門家が見つからず自己判断に迫られる。獣医師への不信・情報バラツキ。",
+      hmw:"どうすれば飼い主が信頼できる情報源をもとに愛犬のケアを自己決定できるか？"
+    },
+    {
+      id:"SC-6", label:"食事の正解不明", tier:"T2", isHypothesis:false,
+      rank:3, n:6, frequency:50, depth:40, unmet:55,
+      credibility:{A:6, B:1, C:0, D:0},
+      fromVerification:1,
+      representativeQuote:{text:"理想のワンパック総合栄養食ウェットが市場にない", participant:"P12（鋪田さん）", credibility:"A"},
+      desc:"何が正しい食事か分からず不安。腸炎・個別化・手作り迷いなど多様な文脈で出現。",
+      hmw:"どうすれば飼い主が愛犬の個体に合った食事の正解を見つけられるか？"
+    }
+  ],
+
+  bubbles: [
+    {label:"変化の不可視",      x:33, y:20, r:17, tier:"T3", isHypothesis:true,  id:"SC-1"},
+    {label:"効果の不可視",      x:50, y:30, r:16, tier:"T2", isHypothesis:false, id:"SC-2"},
+    {label:"予防投資の実在",    x:75, y:90, r:6,  tier:"T1", isHypothesis:false, id:"SC-3"},
+    {label:"食への愛情動機",    x:58, y:80, r:8,  tier:"T1", isHypothesis:false, id:"SC-4"},
+    {label:"専門家不在の自己判断", x:42, y:50, r:13, tier:"T2", isHypothesis:false, id:"SC-5"},
+    {label:"食事の正解不明",    x:50, y:40, r:14, tier:"T2", isHypothesis:false, id:"SC-6"}
+  ]
+};
+
+// ==================== HELPERS ====================
+const TIER_COLOR = { T1: "#27AE60", T2: "#185FA5", T3: "#C8A84B" };
+const CRED_COLOR = { A: "#27AE60", B: "#185FA5", C: "#E67E22", D: "#C8102E" };
+
+function clusterById(id) { return DATA.clusters.find(c => c.id === id); }
+function participantById(id) { return DATA.participants.find(p => p.id === id); }
+
+// Build heatmap matrix: participant -> cluster -> cards[]
+function buildMatrix() {
+  const clusterIds = DATA.clusters.map(c => c.id);
+  const matrix = {};
+  DATA.participants.forEach(p => {
+    matrix[p.id] = {};
+    clusterIds.forEach(cid => { matrix[p.id][cid] = []; });
+    p.cards.forEach(card => {
+      if (matrix[p.id][card.cluster] !== undefined) {
+        matrix[p.id][card.cluster].push(card);
+      }
+    });
+  });
+  return matrix;
+}
+
+// ==================== TAB SWITCH ====================
+let activeTab = 'participants';
+let bubbleChartInstance = null;
+let clusterChartInstances = {};
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    const names = ['participants','bubble','heatmap','clusters'];
+    btn.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  activeTab = name;
+
+  if (name === 'bubble') initBubbleChart();
+  if (name === 'heatmap') initHeatmap();
+  if (name === 'clusters') initClusters();
+}
+
+// ==================== TAB 1: PARTICIPANTS ====================
+let selectedParticipant = 'P1';
+
+function renderParticipants() {
+  const chipsEl = document.getElementById('participant-chips');
+  chipsEl.innerHTML = '';
+  DATA.participants.forEach(p => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (p.id === selectedParticipant ? ' active' : '');
+    chip.textContent = p.id + ' ' + p.name;
+    chip.onclick = () => { selectedParticipant = p.id; renderParticipants(); };
+    chipsEl.appendChild(chip);
+  });
+  renderParticipantDetail();
+}
+
+function renderParticipantDetail() {
+  const p = participantById(selectedParticipant);
+  if (!p) return;
+
+  const headerEl = document.getElementById('detail-header');
+  const typeClass = p.type === 'Verify' ? 'type-verify' : 'type-explore';
+  const typeLabel = p.type === 'Verify' ? '検証型' : '探索型';
+  headerEl.innerHTML = `
+    <div>
+      <div class="detail-name">${p.name}</div>
+      <div class="detail-pet">${p.pet}</div>
+    </div>
+    <span class="type-badge ${typeClass}">${typeLabel}</span>
+  `;
+
+  const cardsEl = document.getElementById('detail-cards');
+  cardsEl.innerHTML = '';
+  p.cards.forEach(card => {
+    const div = document.createElement('div');
+    div.className = 'utterance-card';
+    const verifBadge = card.verificationDerived
+      ? `<span class="verification-badge">verification</span>` : '';
+    div.innerHTML = `
+      <span class="cred-badge cred-${card.credibility}">${card.credibility}</span>
+      <div class="card-body">
+        <div class="card-cluster">${card.clusterLabel} (${card.cluster})</div>
+        <div class="card-text">${card.text}${verifBadge}</div>
+      </div>
+    `;
+    cardsEl.appendChild(div);
+  });
+}
+
+// ==================== TAB 2: BUBBLE CHART ====================
+function initBubbleChart() {
+  if (bubbleChartInstance) {
+    bubbleChartInstance.destroy();
+    bubbleChartInstance = null;
+  }
+
+  const ctx = document.getElementById('bubbleChart').getContext('2d');
+  const ttEl = document.getElementById('bubbleTooltip');
+
+  // Build datasets per tier
+  const tierGroups = { T1: [], T2: [], T3: [] };
+  DATA.bubbles.forEach(b => {
+    const clusterInfo = clusterById(b.id);
+    tierGroups[b.tier].push({
+      x: b.x,
+      y: b.y,
+      r: b.r,
+      _label: b.label,
+      _id: b.id,
+      _isHypothesis: b.isHypothesis,
+      _cluster: clusterInfo
+    });
+  });
+
+  const datasets = Object.entries(tierGroups).map(([tier, points]) => ({
+    label: tier,
+    data: points,
+    backgroundColor: TIER_COLOR[tier] + 'CC',
+    borderColor: TIER_COLOR[tier],
+    borderWidth: 1.5
+  }));
+
+  // Plugin: draw dashed border around SC-1 bubble + labels
+  const afterDrawPlugin = {
+    id: 'customDraw',
+    afterDraw(chart) {
+      const ctx2 = chart.ctx;
+      chart.data.datasets.forEach((ds, di) => {
+        ds.data.forEach((pt, pi) => {
+          const meta = chart.getDatasetMeta(di);
+          if (!meta.data[pi]) return;
+          const el = meta.data[pi];
+          const x = el.x, y = el.y;
+          const r = el.options.radius || el.radius || 10;
+
+          // Label
+          ctx2.save();
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillStyle = '#fff';
+          ctx2.font = 'bold 10px system-ui';
+          const lines = pt._label.split('');
+          // Draw label as two lines if long
+          const half = Math.ceil(pt._label.length / 2);
+          const l1 = pt._label.slice(0, half);
+          const l2 = pt._label.slice(half);
+          if (r > 12) {
+            ctx2.fillText(l1, x, y - 6);
+            ctx2.fillText(l2, x, y + 7);
+          } else {
+            ctx2.font = 'bold 8px system-ui';
+            ctx2.fillText(pt._label.slice(0,4), x, y);
+          }
+          ctx2.restore();
+
+          // Dashed border for hypothesis
+          if (pt._isHypothesis) {
+            ctx2.save();
+            ctx2.setLineDash([4, 3]);
+            ctx2.strokeStyle = '#C8102E';
+            ctx2.lineWidth = 2.5;
+            ctx2.beginPath();
+            ctx2.arc(x, y, r + 3, 0, Math.PI * 2);
+            ctx2.stroke();
+            ctx2.restore();
+          }
+        });
+      });
+    }
+  };
+
+  bubbleChartInstance = new Chart(ctx, {
+    type: 'bubble',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: '出現頻度 (%)', font: { size: 12 } },
+          min: 0, max: 100,
+          grid: { color: '#f0f0f0' }
+        },
+        y: {
+          title: { display: true, text: '行動変容率 (%)', font: { size: 12 } },
+          min: 0, max: 100,
+          grid: { color: '#f0f0f0' }
+        }
+      },
+      onHover(evt, elements) {
+        if (elements.length === 0) {
+          ttEl.style.display = 'none';
+          return;
+        }
+        const el = elements[0];
+        const pt = bubbleChartInstance.data.datasets[el.datasetIndex].data[el.index];
+        const cl = pt._cluster;
+        if (!cl) return;
+
+        const totalCred = cl.credibility.A + cl.credibility.B + cl.credibility.C + cl.credibility.D;
+        const verifPct = cl.fromVerification && cl.n ? Math.round(cl.fromVerification / cl.n * 100) : 0;
+        ttEl.innerHTML = `
+          <h4>${cl.id} ${cl.label}</h4>
+          <div class="tt-row">Tier: <strong>${cl.tier}</strong></div>
+          <div class="tt-row">言及者: <strong>${cl.n}名</strong></div>
+          <div class="tt-row">行動変容率: <strong>${cl.depth}%</strong></div>
+          <div class="tt-row">未充足度: <strong>${cl.unmet}%</strong></div>
+          <div class="tt-quote">"${cl.representativeQuote.text}"<br><small>— ${cl.representativeQuote.participant}</small></div>
+        `;
+
+        const rect = ctx.canvas.getBoundingClientRect();
+        const ex = evt.native.clientX;
+        const ey = evt.native.clientY;
+        const ttW = 280;
+        let left = ex + 16;
+        if (left + ttW > window.innerWidth - 10) left = ex - ttW - 16;
+        ttEl.style.left = left + 'px';
+        ttEl.style.top = Math.min(ey - 20, window.innerHeight - 200) + 'px';
+        ttEl.style.display = 'block';
+      }
+    },
+    plugins: [afterDrawPlugin]
+  });
+
+  ctx.canvas.addEventListener('mouseleave', () => { ttEl.style.display = 'none'; });
+}
+
+// ==================== TAB 3: HEATMAP ====================
+function initHeatmap() {
+  const table = document.getElementById('heatmapTable');
+  table.innerHTML = '';
+  const matrix = buildMatrix();
+  const clusters = DATA.clusters;
+  const participants = DATA.participants;
+
+  // Header row
+  const thead = document.createElement('thead');
+  const hrow = document.createElement('tr');
+  const thEmpty = document.createElement('th');
+  thEmpty.textContent = '';
+  hrow.appendChild(thEmpty);
+
+  clusters.forEach(cl => {
+    const th = document.createElement('th');
+    th.className = 'col-header';
+    const dotColor = TIER_COLOR[cl.tier];
+    let hypoHtml = cl.isHypothesis ? `<span class="hypothesis-badge">★仮説</span>` : '';
+    th.innerHTML = `<span class="tier-dot" style="background:${dotColor}"></span>${cl.label}${hypoHtml}`;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  // Body rows
+  const tbody = document.createElement('tbody');
+  const hmTt = document.getElementById('hmTooltip');
+
+  participants.forEach(p => {
+    const row = document.createElement('tr');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'row-label' + (p.type === 'Verify' ? ' row-verify' : '');
+    tdLabel.textContent = `${p.id} ${p.name}`;
+    row.appendChild(tdLabel);
+
+    clusters.forEach(cl => {
+      const cards = matrix[p.id][cl.id] || [];
+      const count = cards.length;
+      const td = document.createElement('td');
+      td.className = 'hm-cell';
+
+      let bg = 'transparent';
+      let textColor = '#333';
+      if (count === 1) bg = '#E6F1FB';
+      else if (count === 2) bg = '#85B7EB';
+      else if (count >= 3) { bg = '#185FA5'; textColor = '#fff'; }
+
+      td.style.background = bg;
+      td.style.color = textColor;
+      td.style.fontWeight = count > 0 ? '600' : '400';
+      td.textContent = count > 0 ? count : '';
+
+      if (count > 0) {
+        td.addEventListener('mouseenter', (e) => {
+          const lines = cards.map(c => `[${c.credibility}] ${c.text}`).join('\n');
+          hmTt.textContent = lines;
+          hmTt.style.display = 'block';
+          positionHmTt(e);
+        });
+        td.addEventListener('mousemove', positionHmTt);
+        td.addEventListener('mouseleave', () => { hmTt.style.display = 'none'; });
+      }
+
+      row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+
+  // Footer row
+  const footerRow = document.createElement('tr');
+  footerRow.className = 'heatmap-footer';
+  const tdFLabel = document.createElement('td');
+  tdFLabel.textContent = '言及者数';
+  tdFLabel.style.textAlign = 'left';
+  footerRow.appendChild(tdFLabel);
+
+  clusters.forEach(cl => {
+    const td = document.createElement('td');
+    td.textContent = `${cl.n}/12`;
+    footerRow.appendChild(td);
+  });
+  tbody.appendChild(footerRow);
+  table.appendChild(tbody);
+
+  function positionHmTt(e) {
+    const ttW = 240;
+    let left = e.clientX + 12;
+    if (left + ttW > window.innerWidth - 10) left = e.clientX - ttW - 12;
+    hmTt.style.left = left + 'px';
+    hmTt.style.top = Math.min(e.clientY - 10, window.innerHeight - 120) + 'px';
+  }
+}
+
+// ==================== TAB 4: CLUSTERS ====================
+function initClusters() {
+  // Destroy existing mini charts
+  Object.values(clusterChartInstances).forEach(c => c.destroy());
+  clusterChartInstances = {};
+
+  const grid = document.getElementById('clusterGrid');
+  grid.innerHTML = '';
+
+  DATA.clusters.forEach(cl => {
+    const card = document.createElement('div');
+    card.className = 'cluster-card' + (cl.isHypothesis ? ' hypothesis-card' : '');
+
+    const totalCards = cl.credibility.A + cl.credibility.B + cl.credibility.C + cl.credibility.D;
+    const verifPct = cl.n > 0 ? Math.round(cl.fromVerification / cl.n * 100) : 0;
+    const hypoHtml = cl.isHypothesis
+      ? `<span class="hypo-badge">★ 事前仮説テーマ</span>` : '';
+
+    const mentionPct = Math.round(cl.n / 12 * 100);
+    const barColor = TIER_COLOR[cl.tier];
+
+    card.innerHTML = `
+      <div class="cluster-card-header">
+        <span class="tier-badge tier-${cl.tier}">${cl.tier}</span>
+        <span class="sc-id">${cl.id}</span>
+        <span class="cluster-name">${cl.label}</span>
+        ${hypoHtml}
+        <span class="verif-pct-badge">検証由来 ${verifPct}%</span>
+      </div>
+      <div class="cluster-card-body">
+        <div class="mention-bar-wrap">
+          <div class="mention-bar-label">言及者 ${cl.n}/12名 (${mentionPct}%)</div>
+          <div class="mention-bar-track">
+            <div class="mention-bar-fill" style="width:${mentionPct}%; background:${barColor}"></div>
+          </div>
+        </div>
+        <div class="mini-chart-wrap">
+          <canvas id="chart-${cl.id}" height="50"></canvas>
+        </div>
+        <div class="rep-quote">
+          "${cl.representativeQuote.text}"
+          <div class="rep-quote-attr">— ${cl.representativeQuote.participant}</div>
+        </div>
+        <div class="cluster-desc">${cl.desc}</div>
+        <div class="hmw-box">
+          <strong>HMW</strong>${cl.hmw}
+        </div>
+        <button class="expand-btn" onclick="toggleCardList('${cl.id}', this)">▼ カード一覧を展開</button>
+        <div id="cardlist-${cl.id}" style="display:none" class="card-list-inner"></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Init mini charts after DOM is ready
+  requestAnimationFrame(() => {
+    DATA.clusters.forEach(cl => {
+      const canvas = document.getElementById(`chart-${cl.id}`);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const c = cl.credibility;
+      const chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['A', 'B', 'C', 'D'],
+          datasets: [{
+            data: [c.A, c.B, c.C, c.D],
+            backgroundColor: [CRED_COLOR.A, CRED_COLOR.B, CRED_COLOR.C, CRED_COLOR.D],
+            borderRadius: 2
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { display: false, beginAtZero: true },
+            y: { display: true, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+      clusterChartInstances[cl.id] = chartInstance;
+    });
+  });
+}
+
+function toggleCardList(clusterId, btn) {
+  const el = document.getElementById(`cardlist-${clusterId}`);
+  const isOpen = el.style.display !== 'none';
+  if (isOpen) {
+    el.style.display = 'none';
+    btn.textContent = '▼ カード一覧を展開';
+    return;
+  }
+
+  // Build card list
+  el.innerHTML = '';
+  DATA.participants.forEach(p => {
+    p.cards.filter(c => c.cluster === clusterId).forEach(card => {
+      const div = document.createElement('div');
+      div.className = 'mini-card';
+      div.innerHTML = `
+        <span class="mini-cred cred-${card.credibility}">${card.credibility}</span>
+        <div class="mini-card-text">
+          ${card.text}
+          <div class="mini-card-by">${p.name} (${p.id})</div>
+        </div>
+      `;
+      el.appendChild(div);
+    });
+  });
+
+  el.style.display = 'flex';
+  btn.textContent = '▲ カード一覧を閉じる';
+}
+
+// ==================== INIT ====================
+renderParticipants();
+</script>
+</body>
+</html>
