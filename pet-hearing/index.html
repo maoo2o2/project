@@ -230,6 +230,104 @@
   }
   .mini-card-text { font-size: 11px; color: #444; flex: 1; }
   .mini-card-by { font-size: 10px; color: #aaa; margin-top: 2px; }
+
+  /* --- Stability Badge --- */
+  .stab-badge {
+    padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700;
+  }
+  .stab-3 { background: #E8F7EF; color: #27AE60; border: 1px solid #27AE60; }
+  .stab-2 { background: #EAF3FB; color: #185FA5; border: 1px solid #185FA5; }
+  .stab-1 { background: #FEF9E7; color: #C8A84B; border: 1px solid #C8A84B; }
+  .stab-0 { background: #FDECEA; color: #C8102E; border: 1px solid #C8102E; }
+
+  /* --- Behavior Patterns Section (Cluster Cards) --- */
+  .bp-section {
+    margin: 10px 0; padding: 10px 12px;
+    background: #f9f9f7; border-radius: 6px;
+    border: 1px solid #eee;
+  }
+  .bp-section-title {
+    font-size: 10px; font-weight: 700; color: #888;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .bp-row { margin-bottom: 7px; }
+  .bp-label { font-size: 10px; color: #aaa; margin-bottom: 2px; }
+  .bp-behaviors { list-style: none; padding: 0; margin: 0; }
+  .bp-behaviors li { font-size: 11px; color: #444; padding: 1px 0; }
+  .bp-behaviors li::before { content: "• "; color: #bbb; }
+  .bp-jtbd {
+    font-style: italic; color: #185FA5;
+    background: #EAF3FB; border-radius: 4px;
+    padding: 4px 8px; font-size: 11px; display: block;
+  }
+  .bp-opportunity {
+    background: #E8F7EF; border-radius: 4px;
+    padding: 4px 8px; font-size: 11px; color: #1E8449; display: block;
+  }
+
+  /* --- Tab 5: Summary --- */
+  .sm-section { margin-bottom: 32px; }
+  .sm-section-title {
+    font-size: 16px; font-weight: 700; color: #1a1a1a;
+    margin-bottom: 16px; padding-bottom: 8px;
+    border-bottom: 2px solid #e8e8e8;
+  }
+  .sm-kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .sm-kpi-card { background: #f5f5f3; border-radius: 8px; padding: 14px 16px; }
+  .sm-kpi-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .sm-kpi-value { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1.1; }
+  .sm-kpi-sub { font-size: 11px; color: #999; margin-top: 4px; }
+  .sm-conclusion {
+    padding: 14px 16px; background: #FDECEA;
+    border-left: 4px solid #C8102E; border-radius: 0 6px 6px 0;
+    font-size: 13px; color: #444; line-height: 1.7;
+  }
+  .sm-hmw-list { display: flex; flex-direction: column; gap: 10px; }
+  .sm-hmw-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px; border: 1px solid #e8e8e8;
+    border-radius: 8px; background: #fff;
+  }
+  .sm-hmw-num {
+    flex-shrink: 0; width: 24px; height: 24px;
+    border-radius: 50%; background: #333; color: #fff;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sm-hmw-body { flex: 1; }
+  .sm-hmw-text { font-size: 13px; color: #222; margin-bottom: 5px; }
+  .sm-hmw-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .sm-hmw-cluster { font-size: 10px; color: #888; background: #f5f5f3; padding: 1px 6px; border-radius: 8px; }
+  .sm-hmw-n { font-size: 10px; color: #999; }
+  .sm-action-list { display: flex; flex-direction: column; gap: 10px; }
+  .sm-action-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; border: 1px solid #e8e8e8;
+    border-radius: 8px;
+  }
+  .sm-priority-badge {
+    flex-shrink: 0; padding: 3px 9px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+  }
+  .sm-pri-high { background: #E8F7EF; color: #27AE60; border: 1px solid #27AE60; }
+  .sm-pri-mid  { background: #EAF3FB; color: #185FA5; border: 1px solid #185FA5; }
+  .sm-action-body { flex: 1; }
+  .sm-action-title { font-size: 13px; font-weight: 600; color: #222; margin-bottom: 3px; }
+  .sm-action-basis { font-size: 11px; color: #888; margin-bottom: 2px; }
+  .sm-action-how { font-size: 11px; color: #555; }
+  .sm-hearing-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+  .sm-hearing-table th {
+    background: #f5f5f3; padding: 8px 10px;
+    border: 1px solid #e8e8e8; font-weight: 600; text-align: left;
+  }
+  .sm-hearing-table td { padding: 8px 10px; border: 1px solid #e8e8e8; vertical-align: top; }
+  .sm-hearing-table tr:hover td { background: #fafafa; }
+  .sm-empty {
+    padding: 24px; text-align: center;
+    color: #aaa; font-size: 13px;
+    border: 1px dashed #ddd; border-radius: 8px;
+  }
 </style>
 </head>
 <body>
@@ -270,6 +368,7 @@
     <button class="tab-btn" onclick="switchTab('bubble')">Bubble chart</button>
     <button class="tab-btn" onclick="switchTab('heatmap')">Heatmap</button>
     <button class="tab-btn" onclick="switchTab('clusters')">Clusters</button>
+    <button class="tab-btn" onclick="switchTab('summary')">Summary</button>
   </div>
 
   <!-- Tab: Participants -->
@@ -310,6 +409,11 @@
     <div class="cluster-grid" id="clusterGrid"></div>
   </div>
 
+  <!-- Tab: Summary -->
+  <div id="tab-summary" class="tab-content">
+    <div id="summaryContent"></div>
+  </div>
+
 </div>
 
 <script>
@@ -326,7 +430,35 @@ const DATA = {
     t1Count: 2,
     t2Count: 3,
     t3Count: 1,
-    topTheme: "予防投資の実在"
+    topTheme: "予防投資の実在",
+    hypothesisEval: {
+      rank: "6 / 6",
+      stability: "2 / 3",
+      biasLevel: "高",
+      conclusion: "飼い主の<strong>自発的な関節課題言及はゼロ</strong>。価値評価の大半はC評価（誘導後同意）。「既に予防投資をしている層」への追加サービスとしては成立しうるが、新規市場を掘り起こすエビデンスは不足している。P13（黒沼さん）が2回目で明示的に「利用意向なし」と回答（D評価）。唯一の自発的言及は先代犬トラウマを持つP14のみ。"
+    },
+    hmws: [
+      {id:1, text:"どうすれば飼い主が愛犬に喜びと健康を同時に届けられる食事を選べるか？", clusters:"SC-3 + SC-4", tier:"T1", n:9},
+      {id:2, text:"どうすれば飼い主が行っているケアの効果を実感・確認できるか？", clusters:"SC-2", tier:"T2", n:6},
+      {id:3, text:"どうすれば飼い主が愛犬の個体に合った食事の正解を見つけられるか？", clusters:"SC-6 + SC-2", tier:"T2", n:6},
+      {id:4, text:"どうすれば飼い主が信頼できる情報源をもとに愛犬のケアを自己決定できるか？", clusters:"SC-5", tier:"T2", n:5},
+      {id:5, text:"どうすれば飼い主が日常の中で愛犬の関節変化に気づけるか？", clusters:"SC-1", tier:"T3", n:4}
+    ],
+    nextActions: {
+      high: [
+        {title:"機能性フード・トッピングのニーズ深掘り", basis:"SC-3 + SC-4 T1交差点", how:"商品コンセプトテスト（P5, P12 が候補）"},
+        {title:"「効果の可視化」価値提案の再設計", basis:"SC-2 の普遍性（関節限定でない）", how:"価値提案文の選好調査"}
+      ],
+      mid: [
+        {title:"関節可視化の Ah-ha 体験プロトタイプ", basis:"P2 でデモが有効だった証拠", how:"プロトタイプ作成・Ah-ha体験テスト"},
+        {title:"食事 × 健康モニタリングの連動サービス", basis:"SC-2 + SC-6 の重複ニーズ", how:"サービス設計・プロトタイプ検討"}
+      ],
+      hearings: [
+        {target:"関節サプリ未使用者（P1, P10）", question:"購買障壁の詳細。何があれば始めるか"},
+        {target:"既存サプリ使用者（P4, P5）", question:"効果実感の有無。解約・継続の判断基準"},
+        {target:"食育士・手作りユーザー（P10, P3）", question:"理想の食事サービス像"}
+      ]
+    }
   },
 
   participants: [
@@ -439,7 +571,8 @@ const DATA = {
       fromVerification:3,
       representativeQuote:{text:"毎日一緒にいると変化に気づきにくい", participant:"P8（中島さん）", credibility:"A"},
       desc:"専門家が指摘するが飼い主自身の実感は薄い。関節痛の変化への自発的気づきが少ない。",
-      hmw:"どうすれば飼い主が日常の中で愛犬の関節変化に気づけるか？"
+      hmw:"どうすれば飼い主が日常の中で愛犬の関節変化に気づけるか？",
+      stability:{count:2, total:3}
     },
     {
       id:"SC-2", label:"効果の不可視", tier:"T2", isHypothesis:false,
@@ -448,7 +581,13 @@ const DATA = {
       fromVerification:2,
       representativeQuote:{text:"本当にこのフードで合っているのか分からない", participant:"P13（黒沼さん）", credibility:"A"},
       desc:"ケアを続けているが本当に効いているか分からない不安。食事・サプリ・腸炎ケア全般にわたる普遍的課題。",
-      hmw:"どうすれば飼い主が行っているケアの効果を実感できるか？"
+      hmw:"どうすれば飼い主が行っているケアの効果を実感できるか？",
+      stability:{count:3, total:3},
+      behaviorPatterns:{
+        behaviors:["うんちログ・食事記録の自作（Excel/MS Forms）","複数フードのトライアル継続","ケア効果の確証なく行動継続","サプリ調べるが効果イメージ湧かず未使用（P10）"],
+        jtbd:"やっていることが本当に効いているか確認し、ケアへの自信を得たい",
+        opportunity:"ケア効果の数値可視化・フィードバックサービス（食事・サプリ横断）"
+      }
     },
     {
       id:"SC-3", label:"予防投資の実在", tier:"T1", isHypothesis:false,
@@ -457,7 +596,13 @@ const DATA = {
       fromVerification:2,
       representativeQuote:{text:"グルコサミン+イミダゾールサプリを1年継続しています", participant:"P5（横田さん）", credibility:"A"},
       desc:"費用・手間をかけた予防行動が習慣化している。サプリ・整体・健診・環境整備が全員に実在。",
-      hmw:"どうすれば既に予防投資をしている飼い主が、その効果をより確信しながら継続できるか？"
+      hmw:"どうすれば既に予防投資をしている飼い主が、その効果をより確信しながら継続できるか？",
+      stability:{count:3, total:3},
+      behaviorPatterns:{
+        behaviors:["サプリ継続購入（グルコサミン・イミダゾール等）","環境整備（カーペット・ベッド階段・着地マット）","整体・ドッグドック定期受診","月4万円規模の健康投資（P14）"],
+        jtbd:"家族の健康リスクを先手で潰し、後悔のない選択をしたい",
+        opportunity:"既投資層への効果フィードバック・継続動機の強化サービス"
+      }
     },
     {
       id:"SC-4", label:"食への愛情動機", tier:"T1", isHypothesis:false,
@@ -466,7 +611,13 @@ const DATA = {
       fromVerification:1,
       representativeQuote:{text:"同じものばかりでごめんね", participant:"P12（鋪田さん）", credibility:"A"},
       desc:"食を通じた愛情表現・喜ぶ顔への強い動機。高くても美味しければ買う。機能性が必須条件。",
-      hmw:"どうすれば飼い主が愛犬に喜びと健康を同時に届けられる食事を選べるか？"
+      hmw:"どうすれば飼い主が愛犬に喜びと健康を同時に届けられる食事を選べるか？",
+      stability:{count:3, total:3},
+      behaviorPatterns:{
+        behaviors:["毎日の手作りトッピング（茹で肉・野菜）","機能性プレミアムフード購入","食育士資格取得の検討・実施","食いつきを最重要指標として購買判断"],
+        jtbd:"愛犬に美味しくて健康的なものを食べさせ、喜ぶ顔で愛情を確認したい",
+        opportunity:"食いつき×機能性を両立した食事商品（ウェットフード・機能性トッピング）"
+      }
     },
     {
       id:"SC-5", label:"専門家不在の自己判断", tier:"T2", isHypothesis:false,
@@ -475,7 +626,13 @@ const DATA = {
       fromVerification:2,
       representativeQuote:{text:"どの先生を信じていいんだよ", participant:"P14（freddieさん）", credibility:"A"},
       desc:"信頼できる専門家が見つからず自己判断に迫られる。獣医師への不信・情報バラツキ。",
-      hmw:"どうすれば飼い主が信頼できる情報源をもとに愛犬のケアを自己決定できるか？"
+      hmw:"どうすれば飼い主が信頼できる情報源をもとに愛犬のケアを自己決定できるか？",
+      stability:{count:2, total:3},
+      behaviorPatterns:{
+        behaviors:["複数獣医・整体師・トレーナーを渡り歩く","AI・SNS・専門サイトで独自情報収集","信頼できる専門家を自力で探索し続ける"],
+        jtbd:"信頼できる情報源から正しいアドバイスを得て、自己判断への不安を解消したい",
+        opportunity:"専門家監修コンテンツ・信頼できる相談窓口の提供"
+      }
     },
     {
       id:"SC-6", label:"食事の正解不明", tier:"T2", isHypothesis:false,
@@ -484,7 +641,13 @@ const DATA = {
       fromVerification:1,
       representativeQuote:{text:"理想のワンパック総合栄養食ウェットが市場にない", participant:"P12（鋪田さん）", credibility:"A"},
       desc:"何が正しい食事か分からず不安。腸炎・個別化・手作り迷いなど多様な文脈で出現。",
-      hmw:"どうすれば飼い主が愛犬の個体に合った食事の正解を見つけられるか？"
+      hmw:"どうすれば飼い主が愛犬の個体に合った食事の正解を見つけられるか？",
+      stability:{count:3, total:3},
+      behaviorPatterns:{
+        behaviors:["食育士資格取得・自己調査での情報収集","複数フードを2年以上試行錯誤","獣医師への食事記録共有（ログ管理）"],
+        jtbd:"愛犬の個体に合った食事の正解を見つけ、不安なく食事選択をしたい",
+        opportunity:"獣医師監修の個別化フードガイド・食事相談サービス"
+      }
     }
   ],
 
@@ -528,7 +691,7 @@ let clusterChartInstances = {};
 
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-    const names = ['participants','bubble','heatmap','clusters'];
+    const names = ['participants','bubble','heatmap','clusters','summary'];
     btn.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -538,6 +701,7 @@ function switchTab(name) {
   if (name === 'bubble') initBubbleChart();
   if (name === 'heatmap') initHeatmap();
   if (name === 'clusters') initClusters();
+  if (name === 'summary') initSummary();
 }
 
 // ==================== TAB 1: PARTICIPANTS ====================
@@ -848,12 +1012,44 @@ function initClusters() {
     const mentionPct = Math.round(cl.n / 12 * 100);
     const barColor = TIER_COLOR[cl.tier];
 
+    // Stability badge
+    const stabHtml = (() => {
+      if (!cl.stability) return '';
+      const {count, total} = cl.stability;
+      const cls = `stab-${count}`;
+      return `<span class="stab-badge ${cls}" title="クラスタリング安定性">${count}/${total} 安定</span>`;
+    })();
+
+    // Behavior patterns section (T1/T2 only)
+    const bpHtml = (() => {
+      if (!cl.behaviorPatterns) return '<div class="sm-empty">行動パターン: 分析未完了</div>';
+      const bp = cl.behaviorPatterns;
+      const liItems = bp.behaviors.map(b => `<li>${b}</li>`).join('');
+      return `
+        <div class="bp-section">
+          <div class="bp-section-title">行動パターン</div>
+          <div class="bp-row">
+            <div class="bp-label">行動特徴</div>
+            <ul class="bp-behaviors">${liItems}</ul>
+          </div>
+          <div class="bp-row">
+            <div class="bp-label">推定 JTBD</div>
+            <span class="bp-jtbd">${bp.jtbd}</span>
+          </div>
+          <div class="bp-row" style="margin-bottom:0">
+            <div class="bp-label">事業機会（VPC右側）</div>
+            <span class="bp-opportunity">${bp.opportunity}</span>
+          </div>
+        </div>`;
+    })();
+
     card.innerHTML = `
       <div class="cluster-card-header">
         <span class="tier-badge tier-${cl.tier}">${cl.tier}</span>
         <span class="sc-id">${cl.id}</span>
         <span class="cluster-name">${cl.label}</span>
         ${hypoHtml}
+        ${stabHtml}
         <span class="verif-pct-badge">検証由来 ${verifPct}%</span>
       </div>
       <div class="cluster-card-body">
@@ -871,6 +1067,7 @@ function initClusters() {
           <div class="rep-quote-attr">— ${cl.representativeQuote.participant}</div>
         </div>
         <div class="cluster-desc">${cl.desc}</div>
+        ${bpHtml}
         <div class="hmw-box">
           <strong>HMW</strong>${cl.hmw}
         </div>
@@ -943,6 +1140,132 @@ function toggleCardList(clusterId, btn) {
 
   el.style.display = 'flex';
   btn.textContent = '▲ カード一覧を閉じる';
+}
+
+// ==================== TAB 5: SUMMARY ====================
+function initSummary() {
+  const container = document.getElementById('summaryContent');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const s = DATA.summary;
+
+  // ---- Section 1: 事前仮説テーマ評価 ----
+  const hypo = s.hypothesisEval;
+  const section1 = document.createElement('div');
+  section1.className = 'sm-section';
+
+  if (!hypo) {
+    section1.innerHTML = `<div class="sm-section-title">1. 事前仮説テーマ評価（SC-1: 変化の不可視）</div><div class="sm-empty">分析未完了</div>`;
+  } else {
+    const biasColor = hypo.biasLevel === '高' ? '#C8102E' : hypo.biasLevel === '中' ? '#E67E22' : '#27AE60';
+    section1.innerHTML = `
+      <div class="sm-section-title">1. 事前仮説テーマ評価（SC-1: 変化の不可視）</div>
+      <div class="sm-kpi-row">
+        <div class="sm-kpi-card">
+          <div class="sm-kpi-label">課題ランキング</div>
+          <div class="sm-kpi-value">${hypo.rank}</div>
+          <div class="sm-kpi-sub">6クラスタ中（Aスコア自発言及数順）</div>
+        </div>
+        <div class="sm-kpi-card">
+          <div class="sm-kpi-label">クラスタ安定性</div>
+          <div class="sm-kpi-value">${hypo.stability}</div>
+          <div class="sm-kpi-sub">3回のクラスタリングで出現した回数</div>
+        </div>
+        <div class="sm-kpi-card">
+          <div class="sm-kpi-label">バイアス影響</div>
+          <div class="sm-kpi-value" style="color:${biasColor}">${hypo.biasLevel}</div>
+          <div class="sm-kpi-sub">C評価（誘導後同意）比率が高い</div>
+        </div>
+      </div>
+      <div class="sm-conclusion">${hypo.conclusion}</div>
+    `;
+  }
+  container.appendChild(section1);
+
+  // ---- Section 2: HMW候補一覧 ----
+  const section2 = document.createElement('div');
+  section2.className = 'sm-section';
+
+  const hmws = s.hmws;
+  if (!hmws || hmws.length === 0) {
+    section2.innerHTML = `<div class="sm-section-title">2. HMW候補一覧</div><div class="sm-empty">分析未完了</div>`;
+  } else {
+    const hmwItems = hmws.map(h => {
+      const tierCls = `tier-badge tier-${h.tier}`;
+      return `
+        <div class="sm-hmw-item">
+          <div class="sm-hmw-num">${h.id}</div>
+          <div class="sm-hmw-body">
+            <div class="sm-hmw-text">${h.text}</div>
+            <div class="sm-hmw-meta">
+              <span class="${tierCls}" style="padding:2px 8px;font-size:10px;">${h.tier}</span>
+              <span class="sm-hmw-cluster">${h.clusters}</span>
+              <span class="sm-hmw-n">言及者 ${h.n}/12名</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+    section2.innerHTML = `
+      <div class="sm-section-title">2. HMW候補一覧</div>
+      <div class="sm-hmw-list">${hmwItems}</div>
+    `;
+  }
+  container.appendChild(section2);
+
+  // ---- Section 3: 次のアクション ----
+  const section3 = document.createElement('div');
+  section3.className = 'sm-section';
+
+  const na = s.nextActions;
+  if (!na) {
+    section3.innerHTML = `<div class="sm-section-title">3. 次のアクション</div><div class="sm-empty">分析未完了</div>`;
+  } else {
+    const highItems = (na.high || []).map(a => `
+      <div class="sm-action-item">
+        <span class="sm-priority-badge sm-pri-high">優先度: 高</span>
+        <div class="sm-action-body">
+          <div class="sm-action-title">${a.title}</div>
+          <div class="sm-action-basis">根拠: ${a.basis}</div>
+          <div class="sm-action-how">検証方法: ${a.how}</div>
+        </div>
+      </div>`).join('');
+
+    const midItems = (na.mid || []).map(a => `
+      <div class="sm-action-item">
+        <span class="sm-priority-badge sm-pri-mid">優先度: 中</span>
+        <div class="sm-action-body">
+          <div class="sm-action-title">${a.title}</div>
+          <div class="sm-action-basis">根拠: ${a.basis}</div>
+          <div class="sm-action-how">検証方法: ${a.how}</div>
+        </div>
+      </div>`).join('');
+
+    const hearingRows = (na.hearings || []).map(h => `
+      <tr>
+        <td>${h.target}</td>
+        <td>${h.question}</td>
+      </tr>`).join('');
+
+    const hearingTable = hearingRows ? `
+      <div style="margin-top:20px">
+        <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:8px;">追加ヒアリング推奨</div>
+        <table class="sm-hearing-table">
+          <thead><tr><th>ターゲット</th><th>確認したいこと</th></tr></thead>
+          <tbody>${hearingRows}</tbody>
+        </table>
+      </div>` : '';
+
+    section3.innerHTML = `
+      <div class="sm-section-title">3. 次のアクション</div>
+      <div class="sm-action-list">
+        ${highItems}
+        ${midItems}
+      </div>
+      ${hearingTable}
+    `;
+  }
+  container.appendChild(section3);
 }
 
 // ==================== INIT ====================
