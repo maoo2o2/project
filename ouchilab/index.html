@@ -119,6 +119,10 @@ body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #ff
 .utter-id { font-size: 9px; color: #bbb; font-weight: 600; flex-shrink: 0; }
 .utter-text { font-size: 11px; color: #666; line-height: 1.5; font-style: italic; }
 .ev-missing { font-size: 11px; color: #ccc; font-style: italic; }
+.card-type-badge { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 4px; }
+.ctype-mot { background: #E8F8F0; color: #1E8449; }
+.ctype-pat { background: #F4ECF7; color: #7D3C98; }
+.ctype-ind { background: #FDFEFE; color: #999; border: 1px solid #ddd; }
 
 /* 行動パターン */
 .bp-item { margin-bottom: 8px; padding: 10px 12px; background: #fff; border-radius: 8px; border: 1px solid #e0e0e0; }
@@ -970,6 +974,14 @@ function qClass(q) {
   return 'q-bl';
 }
 
+function cardTypeLabel(id) {
+  if (/^INS-M-/.test(id))           return { label: '動機推論', cls: 'ctype-mot' };
+  if (/^INS-P-\d/.test(id))         return { label: 'パターン', cls: 'ctype-pat' };
+  if (/^INS-P\d{3}-/.test(id))      return { label: '個人分析', cls: 'ctype-ind' };
+  if (/^INS-\d{3}-/.test(id))       return { label: '個人分析', cls: 'ctype-ind' };
+  return { label: '分析', cls: 'ctype-ind' };
+}
+
 function scoreClass(v) {
   if (v === '高') return 'high';
   if (v === '中') return 'mid';
@@ -1022,10 +1034,12 @@ function renderDetail(id) {
         const q = UTTERANCE_QUOTES[sid];
         return q ? `<div class="utter-quote"><span class="utter-id">${sid}</span><span class="utter-text">${q}</span></div>` : '';
       }).filter(Boolean).join('');
+      const ct = cardTypeLabel(cid);
       return `<div class="evidence-card">
         <div class="ev-head">
           <span class="ev-id">${cid}</span>
           <span class="ev-tier ${card.tier === 'T2' ? 't2' : 't3'}">${card.tier}</span>
+          <span class="card-type-badge ${ct.cls}">${ct.label}</span>
           <span class="ev-persons">${card.persons.join(' · ')}</span>
         </div>
         <div class="ev-text">${card.text}</div>
