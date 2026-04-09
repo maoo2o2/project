@@ -1001,7 +1001,7 @@ function renderGrid() {
           ${needsMore ? '<span class="needs-more-badge">追加ヒアリング推奨</span>' : ''}
         </div>
         <div class="cl-name">${c.label}</div>
-        <div class="cl-stat">${c.n}名</div>
+        <div class="cl-stat">${c.n}名 / 12名</div>
         <div class="cl-icl-tags">${c.icl.map(i => `<span class="icl-tag">${i}</span>`).join('')}</div>
       </div>`;
   }).join('');
@@ -1104,7 +1104,7 @@ function renderDetail(id) {
         ${needsMore ? '<span class="needs-more-badge">追加ヒアリング推奨</span>' : ''}
       </div>
       <div class="detail-name">${c.label}</div>
-      <div class="detail-stat">${c.n}名が言及</div>
+      <div class="detail-stat">${c.n}名 / 12名</div>
       <div class="score-row">
         <span class="score-chip">確認：${c.n}名 / ${c.freq}%</span>
         <span class="score-chip ${scoreClass(c.scores.depth)}">課題の深さ：${c.scores.depth}</span>
