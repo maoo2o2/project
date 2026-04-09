@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>参加者ビュー — ペットヒアリング分析 v2</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #f7f7f5; color: #1a1a1a; font-size: 14px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.top-nav { display: flex; align-items: center; gap: 0; background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 20px; flex-shrink: 0; }
+.top-nav-title { font-size: 13px; font-weight: 700; color: #1a1a1a; padding: 12px 16px 12px 0; margin-right: 8px; border-right: 1px solid #e8e8e8; }
+.nav-tab { padding: 12px 16px; font-size: 13px; color: #888; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.12s; }
+.nav-tab:hover { color: #1a1a1a; }
+.nav-tab.active { color: #C8102E; border-bottom-color: #C8102E; font-weight: 600; }
+.panels { display: flex; flex: 1; overflow: hidden; }
+
+/* Left panel */
+.left { width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid #e8e8e8; display: flex; flex-direction: column; overflow: hidden; }
+.left-head { padding: 16px 16px 10px; border-bottom: 1px solid #f0f0ee; }
+.back-link { font-size: 11px; color: #C8102E; text-decoration: none; display: block; margin-bottom: 8px; }
+.back-link:hover { text-decoration: underline; }
+.left-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+.left-sub { font-size: 11px; color: #999; margin-top: 2px; }
+.chip-list { flex: 1; overflow-y: auto; padding: 10px 10px; display: flex; flex-direction: column; gap: 4px; }
+.chip { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 7px; border: 1px solid #e8e8e8; background: #fff; cursor: pointer; text-align: left; font-size: 12px; font-weight: 500; color: #1a1a1a; transition: all 0.15s; }
+.chip:hover { border-color: #C8102E; background: #fef8f8; }
+.chip.active { border-color: #C8102E; background: #fef3f3; color: #C8102E; }
+.chip-id { font-size: 10px; color: #bbb; font-weight: 400; }
+.chip.active .chip-id { color: #e8867a; }
+
+/* Right panel */
+.right { flex: 1; overflow-y: auto; padding: 28px 32px; }
+
+/* Profile */
+.profile-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+.profile-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.profile-name { font-size: 18px; font-weight: 700; }
+.type-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.badge-verify { background: #fdecea; color: #C8102E; }
+.badge-explore { background: #e8f7ef; color: #1e8449; }
+.profile-pet { font-size: 13px; color: #444; margin-bottom: 6px; }
+.profile-attrs { display: flex; gap: 16px; font-size: 12px; color: #888; margin-bottom: 10px; }
+.profile-style { font-size: 12px; color: #555; line-height: 1.7; margin-bottom: 10px; }
+.memo-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.memo-chip { font-size: 11px; background: #f5f5f3; color: #666; padding: 2px 9px; border-radius: 10px; }
+
+/* Section */
+.section { margin-bottom: 20px; }
+.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #aaa; margin-bottom: 10px; }
+
+/* Cluster tags */
+.cl-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.cl-tag { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: #f0f4ff; color: #185FA5; border: 1px solid #d0dff5; }
+
+/* Chains */
+.chain-item { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+.chain-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.chain-theme { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.chain-tier { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; color: #fff; flex-shrink: 0; }
+.t2 { background: #185FA5; } .t3 { background: #C8A84B; }
+.chain-summary { font-size: 12px; color: #555; line-height: 1.7; }
+
+/* Utterance cards */
+.ucard { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+.ucard.post { background: #f9f9f7; }
+.ucard-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.cred-badge { font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.cA { background: #27AE60; } .cB { background: #185FA5; } .cC { background: #E67E22; } .cD { background: #aaa; }
+.ucard-label { font-size: 11px; color: #999; }
+.ucard-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.utag { font-size: 10px; background: #f5f5f3; color: #888; padding: 1px 6px; border-radius: 8px; }
+.ucard-quote { font-size: 13px; color: #1a1a1a; line-height: 1.7; margin-bottom: 6px; }
+.ucard-foot { display: flex; gap: 12px; font-size: 11px; color: #bbb; }
+.empty { color: #ccc; font-size: 12px; font-style: italic; padding: 8px 0; }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <span class="top-nav-title">ペット事業 ヒアリング横断分析 v3</span>
+  <a href="dashboard-v3.html" class="nav-tab">クラスタ・インサイト</a>
+  <span class="nav-tab active">参加者発話</span>
+</nav>
+
+<div class="panels">
+<div class="left">
+  <div class="left-head">
+    <div class="left-title">参加者</div>
+    <div class="left-sub">12名・220枚</div>
+  </div>
+  <div class="chip-list">
+    <button class="chip" onclick="select('P-001')" id="chip-P-001">ぱじさん<span class="chip-id">P-001</span></button>
+<button class="chip" onclick="select('P-002')" id="chip-P-002">狩野さん（2回目）<span class="chip-id">P-002</span></button>
+<button class="chip" onclick="select('P-003')" id="chip-P-003">狩野さん（初回）<span class="chip-id">P-003</span></button>
+<button class="chip" onclick="select('P-004')" id="chip-P-004">横田さん（2回目）<span class="chip-id">P-004</span></button>
+<button class="chip" onclick="select('P-005')" id="chip-P-005">横田さん（初回）<span class="chip-id">P-005</span></button>
+<button class="chip" onclick="select('P-006')" id="chip-P-006">髙見さん<span class="chip-id">P-006</span></button>
+<button class="chip" onclick="select('P-009')" id="chip-P-009">奥野さん<span class="chip-id">P-009</span></button>
+<button class="chip" onclick="select('P-010')" id="chip-P-010">新堀さん<span class="chip-id">P-010</span></button>
+<button class="chip" onclick="select('P-011')" id="chip-P-011">中嶋さん<span class="chip-id">P-011</span></button>
+<button class="chip" onclick="select('P-012')" id="chip-P-012">鋪田さん（初回）<span class="chip-id">P-012</span></button>
+<button class="chip" onclick="select('P-013')" id="chip-P-013">黒沼さん（初回）<span class="chip-id">P-013</span></button>
+<button class="chip" onclick="select('P-014')" id="chip-P-014">freddieさん<span class="chip-id">P-014</span></button>
+  </div>
+</div>
+
+<div class="right" id="rightPane">
+  <!-- rendered by JS -->
+</div>
+
+<script>
+const PARTICIPANTS = {
+};
+
+const CL_LABELS = {
+'CL-A': '朝の時間的切迫と精神的負荷',
+'CL-B': '夕方〜夜の時間帯における家事・育児の集中過負荷',
+'CL-C': '夕食の調理負担（時間・体力・気力の不足）',
+'CL-D': '献立決定の認知負荷と工夫',
+'CL-E': '子供の偏食・食の拒否による調理徒労感',
+'CL-F': '洗い物・後片付けへの強い嫌悪',
+'CL-G': '片付け・収納の慢性的な困難',
+'CL-H': '家事代行サービスの利用障壁（担当者・継続性・前提作業）',
+'CL-I': '外部食事サービスのコスト・価値への懸念',
+'CL-J': '配偶者の家事参加不足・家事観の相違',
+'CL-K': '訪問型サービスへの配偶者の抵抗・心理的障壁',
+'CL-L': '平日の子供手伝い機会の喪失と週末手伝いの実践',
+'CL-M': '子供の家事スキル習得と成長機会への期待',
+'CL-N': '外部食事サービスの利用と生活変容効果',
+'CL-O': '自分だけの時間（自由時間）の完全喪失',
+'CL-P': '子供の就寝時間と家事完遂のトレードオフ',
+'CL-Q': '外部専門家による子供教育（食育）への関心',
+};
+
+const CARDS = {
+};
+
+const CHAINS = {
+};
+
+const PERSON_CLUSTERS = {
+};
+
+const ORDER = [];
+
+function select(pid) {
+  ORDER.forEach(p => {
+    const chip = document.getElementById('chip-' + p);
+    if (chip) chip.classList.toggle('active', p === pid);
+  });
+  render(pid);
+}
+
+function render(pid) {
+  const p = PARTICIPANTS[pid];
+  const memos = p.memo.split('・').map(m => `<span class="memo-chip">${m}</span>`).join('');
+  const familyHtml = p.family ? `<span>👨‍👩‍👧 ${p.family}</span>` : '';
+  const typeClass = p.type === '検証' ? 'badge-verify' : 'badge-explore';
+
+  // clusters
+  const cls = PERSON_CLUSTERS[pid] || [];
+  const clHtml = cls.length
+    ? cls.map(c => `<span class="cl-tag">${c}: ${CL_LABELS[c] || ''}</span>`).join('')
+    : '<span class="empty">該当なし</span>';
+
+  // chains
+  const ch = CHAINS[pid] || [];
+  const chainHtml = ch.length ? ch.map(c => `
+    <div class="chain-item">
+      <div class="chain-head">
+        <span class="chain-tier ${c.ti === 'T2' ? 't2' : 't3'}">${c.ti}</span>
+        <span class="chain-theme">${c.th}</span>
+      </div>
+      <div class="chain-summary">${c.sm}</div>
+    </div>`).join('') : '';
+
+  // cards
+  const cards = CARDS[pid] || [];
+  const cardHtml = cards.map(c => {
+    const isPost = c.tm && c.tm.includes('提示後');
+    const tagsHtml = (c.tags || []).map(t => `<span class="utag">${t}</span>`).join('');
+    return `<div class="ucard${isPost ? ' post' : ''}">
+      <div class="ucard-head">
+        <span class="cred-badge c${c.cr}">${c.cr}</span>
+        <span class="ucard-label">${c.lb || c.id}</span>
+        <div class="ucard-tags">${tagsHtml}</div>
+      </div>
+      <div class="ucard-quote">${c.q || '—'}</div>
+      <div class="ucard-foot">
+        <span>${c.em}</span>
+        <span>${c.tm}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('rightPane').innerHTML = `
+    <div class="profile-card">
+      <div class="profile-top">
+        <span class="profile-name">${p.name}</span>
+        <span class="type-badge ${typeClass}">${p.type}型</span>
+      </div>
+      <div class="profile-pet">🐾 ${p.pet}</div>
+      <div class="profile-attrs">
+        <span>🎂 ${p.age}</span>
+        ${familyHtml}
+      </div>
+      <div class="profile-style">${p.style}</div>
+      <div class="memo-chips">${memos}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">所属クラスタ</div>
+      <div class="cl-tags">${clHtml}</div>
+    </div>
+
+    ${chainHtml ? `<div class="section"><div class="section-title">行動チェーン</div>${chainHtml}</div>` : ''}
+
+    <div class="section">
+      <div class="section-title">発話カード（${cards.length}枚）</div>
+      ${cardHtml}
+    </div>
+  `;
+}
+
+// init — URL param ?p=P-014 で直接ジャンプ
+const initPid = new URLSearchParams(location.search).get('p');
+select(ORDER.includes(initPid) ? initPid : 'P-001');
+</script>
+</div><!-- /panels -->
+</body>
+</html>
