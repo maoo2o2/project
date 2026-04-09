@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ペットヒアリング分析 v2 — ファイル一覧</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #f7f7f5; color: #333; font-size: 14px; }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .meta { font-size: 12px; color: #999; margin-top: 4px; margin-bottom: 32px; }
+  .section { margin-bottom: 28px; }
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #aaa; margin-bottom: 10px; }
+  .file-list { display: flex; flex-direction: column; gap: 6px; }
+  .file-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; background: #fff; border-radius: 8px;
+    border: 1px solid #e8e8e8; text-decoration: none; color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .file-item:hover { border-color: #C8102E; box-shadow: 0 2px 8px rgba(200,16,46,0.08); }
+  .file-icon { font-size: 18px; flex-shrink: 0; width: 28px; text-align: center; }
+  .file-info { flex: 1; }
+  .file-name { font-weight: 600; font-size: 13px; color: #1a1a1a; }
+  .file-desc { font-size: 11px; color: #888; margin-top: 2px; }
+  .file-badge {
+    flex-shrink: 0; padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700;
+  }
+  .badge-html { background: #FDECEA; color: #C8102E; }
+  .badge-yaml { background: #EAF3FB; color: #185FA5; }
+  .badge-md { background: #E8F7EF; color: #1E8449; }
+  .badge-dir { background: #f5f5f3; color: #777; }
+  .plain-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; background: #fff; border-radius: 8px;
+    border: 1px solid #e8e8e8; color: inherit;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ペット事業 ヒアリング横断分析 v2</h1>
+  <div class="meta">12名・220枚 | Phase 0–5 完了 | 2026-04-08</div>
+
+  <div class="section">
+    <div class="section-title">ダッシュボード</div>
+    <div class="file-list">
+      <a href="participants.html" class="file-item">
+        <div class="file-icon">👤</div>
+        <div class="file-info">
+          <div class="file-name">participants.html</div>
+          <div class="file-desc">参加者ビュー — プロフィール・所属クラスタ・行動チェーン・発話カード一覧</div>
+        </div>
+        <span class="file-badge badge-html">HTML</span>
+      </a>
+      <a href="dashboard-v3.html" class="file-item">
+        <div class="file-icon">📊</div>
+        <div class="file-info">
+          <div class="file-name">dashboard-v3.html</div>
+          <div class="file-desc">クラスタ詳細・インサイト・発話・HMW 一覧（v3）</div>
+        </div>
+        <span class="file-badge badge-html">HTML</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Phase 3–5 アウトプット</div>
+    <div class="file-list">
+      <a href="weight-map.yaml" class="file-item">
+        <div class="file-icon">⚖️</div>
+        <div class="file-info">
+          <div class="file-name">weight-map.yaml</div>
+          <div class="file-desc">バイアス検証・スコアリング・統合マップ（4象限プロットデータ）</div>
+        </div>
+        <span class="file-badge badge-yaml">YAML</span>
+      </a>
+      <a href="hmw-candidates.yaml" class="file-item">
+        <div class="file-icon">💡</div>
+        <div class="file-info">
+          <div class="file-name">hmw-candidates.yaml</div>
+          <div class="file-desc">行動パターン11個・HMW候補15個（T2:13 / T3:2）</div>
+        </div>
+        <span class="file-badge badge-yaml">YAML</span>
+      </a>
+      <a href="summary.yaml" class="file-item">
+        <div class="file-icon">📋</div>
+        <div class="file-info">
+          <div class="file-name">summary.yaml</div>
+          <div class="file-desc">仮説テーマ評価・テーマ推奨・次のアクション（Phase 5）</div>
+        </div>
+        <span class="file-badge badge-yaml">YAML</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Phase 2 アウトプット</div>
+    <div class="file-list">
+      <a href="事実クラスタ.yaml" class="file-item">
+        <div class="file-icon">🗂️</div>
+        <div class="file-info">
+          <div class="file-name">事実クラスタ.yaml</div>
+          <div class="file-desc">12クラスタ（CL-A〜CL-L）全発話カード・信憑性・タイミング</div>
+        </div>
+        <span class="file-badge badge-yaml">YAML</span>
+      </a>
+      <a href="インサイトクラスタ.yaml" class="file-item">
+        <div class="file-icon">🔍</div>
+        <div class="file-info">
+          <div class="file-name">インサイトクラスタ.yaml</div>
+          <div class="file-desc">8インサイトクラスタ（ICL-1〜ICL-8）・根拠の厚さ</div>
+        </div>
+        <span class="file-badge badge-yaml">YAML</span>
+      </a>
+      <a href="Phase2-summary.md" class="file-item">
+        <div class="file-icon">📝</div>
+        <div class="file-info">
+          <div class="file-name">Phase2-summary.md</div>
+          <div class="file-desc">Phase 2 完了レポート・最有望仮説・次フェーズ条件</div>
+        </div>
+        <span class="file-badge badge-md">MD</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">生データ</div>
+    <div class="file-list">
+      <a href="utterance-cards.yaml" class="file-item">
+        <div class="file-icon">🃏</div>
+        <div class="file-info">
+          <div class="file-name">utterance-cards.yaml</div>
+          <div class="file-desc">全220枚の発話カード（信憑性・タイミング・感情トーン）</div>
+        </div>
+        <span class="file-badge badge-yaml">YAML</span>
+      </a>
+      <a href="inventory.md" class="file-item">
+        <div class="file-icon">📦</div>
+        <div class="file-info">
+          <div class="file-name">inventory.md</div>
+          <div class="file-desc">参加者12名のプロフィール・インタビュー概要</div>
+        </div>
+        <span class="file-badge badge-md">MD</span>
+      </a>
+      <div class="plain-item">
+        <div class="file-icon">📁</div>
+        <div class="file-info">
+          <div class="file-name" style="color:#777;">cards/</div>
+          <div class="file-desc">参加者別カードファイル（P-001〜P-014）</div>
+        </div>
+        <span class="file-badge badge-dir">DIR</span>
+      </div>
+      <div class="plain-item">
+        <div class="file-icon">📁</div>
+        <div class="file-info">
+          <div class="file-name" style="color:#777;">insights/</div>
+          <div class="file-desc">参加者別インサイトカードファイル</div>
+        </div>
+        <span class="file-badge badge-dir">DIR</span>
+      </div>
+      <div class="plain-item">
+        <div class="file-icon">📁</div>
+        <div class="file-info">
+          <div class="file-name" style="color:#777;">raw/</div>
+          <div class="file-desc">生ヒアリング音声・テキスト</div>
+        </div>
+        <span class="file-badge badge-dir">DIR</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
