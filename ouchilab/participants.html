@@ -14,6 +14,23 @@ body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #f7
 .nav-tab.active { color: #C8102E; border-bottom-color: #C8102E; font-weight: 600; }
 .panels { display: flex; flex: 1; overflow: hidden; }
 
+/* ヘルプモーダル */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+.modal-box { background: #fff; border-radius: 12px; width: 640px; max-width: calc(100vw - 32px); max-height: 85vh; overflow-y: auto; padding: 28px 32px; position: relative; }
+.modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 20px; color: #bbb; cursor: pointer; line-height: 1; }
+.modal-close:hover { color: #555; }
+.modal-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; }
+.help-section { margin-bottom: 24px; }
+.help-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #aaa; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid #eee; }
+.help-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.help-table th { text-align: left; padding: 5px 8px; color: #aaa; font-weight: 600; border-bottom: 1px solid #eee; }
+.help-table td { padding: 6px 8px; vertical-align: top; border-bottom: 1px solid #f5f5f3; color: #444; line-height: 1.55; }
+.help-table td:first-child { white-space: nowrap; font-weight: 700; color: #1a1a1a; }
+.help-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 6px; margin-right: 4px; vertical-align: middle; }
+.chain-box { background: #f9f9f7; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #555; line-height: 1.9; font-family: monospace; }
+.chain-box .arrow { color: #ccc; }
+.chain-box .highlight { color: #C8102E; font-weight: 700; }
+
 /* Left panel */
 .left { width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid #e8e8e8; display: flex; flex-direction: column; overflow: hidden; }
 .left-head { padding: 16px 16px 10px; border-bottom: 1px solid #f0f0ee; }
@@ -80,6 +97,7 @@ body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #f7
   <span class="top-nav-title">ouchilab ヒアリング横断分析 v3</span>
   <a href="index.html" class="nav-tab">クラスタ・インサイト</a>
   <span class="nav-tab active">参加者発話</span>
+  <button class="nav-tab" onclick="document.getElementById('helpModal').style.display='flex'" style="background:none;border:none;cursor:pointer;">？ 凡例</button>
 </nav>
 
 <div class="panels">
@@ -89,18 +107,18 @@ body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #f7
     <div class="left-sub">12名・220枚</div>
   </div>
   <div class="chip-list">
-    <button class="chip" onclick="select('P-001')" id="chip-P-001">ぱじさん<span class="chip-id">P-001</span></button>
-<button class="chip" onclick="select('P-002')" id="chip-P-002">狩野さん（2回目）<span class="chip-id">P-002</span></button>
-<button class="chip" onclick="select('P-003')" id="chip-P-003">狩野さん（初回）<span class="chip-id">P-003</span></button>
-<button class="chip" onclick="select('P-004')" id="chip-P-004">横田さん（2回目）<span class="chip-id">P-004</span></button>
-<button class="chip" onclick="select('P-005')" id="chip-P-005">横田さん（初回）<span class="chip-id">P-005</span></button>
-<button class="chip" onclick="select('P-006')" id="chip-P-006">髙見さん<span class="chip-id">P-006</span></button>
-<button class="chip" onclick="select('P-009')" id="chip-P-009">奥野さん<span class="chip-id">P-009</span></button>
-<button class="chip" onclick="select('P-010')" id="chip-P-010">新堀さん<span class="chip-id">P-010</span></button>
-<button class="chip" onclick="select('P-011')" id="chip-P-011">中嶋さん<span class="chip-id">P-011</span></button>
-<button class="chip" onclick="select('P-012')" id="chip-P-012">鋪田さん（初回）<span class="chip-id">P-012</span></button>
-<button class="chip" onclick="select('P-013')" id="chip-P-013">黒沼さん（初回）<span class="chip-id">P-013</span></button>
-<button class="chip" onclick="select('P-014')" id="chip-P-014">freddieさん<span class="chip-id">P-014</span></button>
+    <button class="chip" onclick="select('P-001')" id="chip-P-001">ねこねこさん<span class="chip-id">P-001</span></button>
+<button class="chip" onclick="select('P-002')" id="chip-P-002">7タスカジさん<span class="chip-id">P-002</span></button>
+<button class="chip" onclick="select('P-003')" id="chip-P-003">33タスカジさん<span class="chip-id">P-003</span></button>
+<button class="chip" onclick="select('P-004')" id="chip-P-004">しきちぇりさん<span class="chip-id">P-004</span></button>
+<button class="chip" onclick="select('P-005')" id="chip-P-005">36タスカジさん<span class="chip-id">P-005</span></button>
+<button class="chip" onclick="select('P-006')" id="chip-P-006">おひなさん<span class="chip-id">P-006</span></button>
+<button class="chip" onclick="select('P-007')" id="chip-P-007">MTさん<span class="chip-id">P-007</span></button>
+<button class="chip" onclick="select('P-008')" id="chip-P-008">Fさん<span class="chip-id">P-008</span></button>
+<button class="chip" onclick="select('P-009')" id="chip-P-009">さくらささん<span class="chip-id">P-009</span></button>
+<button class="chip" onclick="select('P-010')" id="chip-P-010">Sさん<span class="chip-id">P-010</span></button>
+<button class="chip" onclick="select('P-011')" id="chip-P-011">セツさん<span class="chip-id">P-011</span></button>
+<button class="chip" onclick="select('P-012')" id="chip-P-012">はやせさん<span class="chip-id">P-012</span></button>
   </div>
 </div>
 
@@ -545,5 +563,61 @@ const initPid = new URLSearchParams(location.search).get('p');
 select(ORDER.includes(initPid) ? initPid : 'P-001');
 </script>
 </div><!-- /panels -->
+
+<!-- ヘルプモーダル -->
+<div id="helpModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('helpModal').style.display='none'">✕</button>
+    <div class="modal-title">分析記号・凡例</div>
+
+    <div class="help-section">
+      <div class="help-section-title">データの流れ（トレーサビリティチェーン）</div>
+      <div class="chain-box">
+        L1&nbsp;ヒアリング原文<br>
+        <span class="arrow">&nbsp;&nbsp;↓ 引用</span><br>
+        L2&nbsp;発話カード（<span class="highlight">UC</span>）— 1発話 = 1カード<br>
+        <span class="arrow">&nbsp;&nbsp;↓ 要約・グループ化</span><br>
+        L3&nbsp;インサイトカード（<span class="highlight">INS</span>）— 解釈・洞察<br>
+        <span class="arrow">&nbsp;&nbsp;↓ クラスタリング</span><br>
+        L4&nbsp;インサイトクラスタ（<span class="highlight">ICL</span>）— インサイトの束<br>
+        <span class="arrow">&nbsp;&nbsp;↓ 重み付け</span><br>
+        L5&nbsp;HMW / 事業機会
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">記号の意味</div>
+      <table class="help-table">
+        <thead><tr><th>記号</th><th>正式名称</th><th>何を表すか</th></tr></thead>
+        <tbody>
+          <tr><td>CL</td><td>事実クラスタ</td><td>発話カード（UC）を似た話題でまとめたグループ。「何が起きているか」の事実ベースの塊。</td></tr>
+          <tr><td>ICL</td><td>インサイトクラスタ</td><td>インサイトカード（INS）をまとめたグループ。「なぜそうなっているか」の因果構造・解釈の束。CLに対応するICLがない場合もある。</td></tr>
+          <tr><td>UC</td><td>発話カード</td><td>インタビュー原文から切り出した1発話 = 1カード。L1の証拠を保持する最小単位。</td></tr>
+          <tr><td>INS</td><td>インサイトカード</td><td>複数の発話カードから導いた解釈・洞察。4種類（パターン・矛盾・動機推論・不在）がある。</td></tr>
+          <tr><td>BP</td><td>行動パターン</td><td>複数の対象者に共通して見られた具体的な行動の型。JTBDと紐づく。</td></tr>
+          <tr><td>HMW</td><td>How Might We</td><td>「どうすれば〜できるか？」という設計問い。T1〜T3のTierで優先度を表す。</td></tr>
+          <tr><td>JTBD</td><td>Jobs To Be Done</td><td>対象者が本当に成し遂げようとしていること（表面的な行動の背後にある目的）。</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">バッジ・ラベルの見方</div>
+      <table class="help-table">
+        <thead><tr><th>表示</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td><span class="help-badge" style="background:#FDECEA;color:#922B21;">右上</span></td><td>最有望ゾーン — 課題の深さ・出現頻度ともに高い。優先的に設計検討に進む。</td></tr>
+          <tr><td><span class="help-badge" style="background:#EBF5FB;color:#1A5276;">左上</span></td><td>追加ヒアリング推奨 — インサイトは深いが対象者数が少ない。</td></tr>
+          <tr><td><span class="help-badge" style="background:#185FA5;color:#fff;">T2</span></td><td>HMW Tier 2 — 証拠が厚く、今すぐ設計に使える問い（最優先）。</td></tr>
+          <tr><td><span class="help-badge" style="background:#C8A84B;color:#fff;">T3</span></td><td>HMW Tier 3 — 示唆はあるが証拠がやや薄い。参考として保持。</td></tr>
+          <tr><td>★★★ / ★★☆ / ★☆☆</td><td>事実評価（根拠の信頼度）— 複数名の発話＋文脈一致で★3。</td></tr>
+          <tr><td><span class="help-badge" style="background:#E8F8F0;color:#1E8449;">動機推論</span></td><td>INSカードの種別 — 発話の背後にある動機・感情を推論したカード。</td></tr>
+          <tr><td><span class="help-badge" style="background:#F4ECF7;color:#7D3C98;">パターン</span></td><td>INSカードの種別 — 複数名に繰り返し現れる行動・思考のパターン。</td></tr>
+          <tr><td><span class="help-badge" style="background:#FDFEFE;color:#999;border:1px solid #ddd;">矛盾</span></td><td>INSカードの種別 — 発話間または発話と行動の間に見られる矛盾・葛藤。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 </body>
 </html>
