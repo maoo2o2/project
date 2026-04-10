@@ -896,7 +896,7 @@ const CLUSTERS = [
   {
     id: 'CL-F', label: '洗い物・後片付けへの強い嫌悪', q: '左下', stars: 1,
     n: 3, freq: 25,
-    scores: { freq: '中', depth: '高', unmet: '中' },
+    scores: { freq: '中', depth: '低', unmet: '中' },
     icl: [],
     quotes: [
       { text: '最も嫌いな家事: 洗い物(油汚れ、特にカレーや揚げ物の後片付け)', attr: 'P-03（33タスカジさん）' },
@@ -1098,11 +1098,6 @@ function renderGrid() {
     const needsMore = c.n <= 3;
     const show = currentFilter === 'all' || (currentFilter === '要追加' && needsMore);
     const sel = c.id === selectedId;
-    const depth = computeDepth(c);
-    const depthLabel = depth ? depth.label : null;
-    const depthChip = depthLabel
-      ? `<span class="cl-depth cl-depth-${depthLabel}">深さ：${depthLabel}</span>`
-      : `<span class="cl-depth cl-depth-null">深さ：計測不能</span>`;
     return `
       <div class="cl-card ${sel ? 'selected' : ''} ${!show ? 'dim' : ''}"
            onclick="selectCluster('${c.id}')">
@@ -1112,7 +1107,11 @@ function renderGrid() {
         </div>
         <div class="cl-name">${c.label}</div>
         <div class="cl-stat">${c.n}名 / 12名</div>
-        ${depthChip}
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
+          <span class="score-chip">確認：${c.n}名 / ${c.freq}%</span>
+          <span class="score-chip ${scoreClass(c.scores.depth)}">課題の深さ：${c.scores.depth}</span>
+          <span class="score-chip ${scoreClass(c.scores.unmet)}">未充足度：${c.scores.unmet}</span>
+        </div>
         <div class="cl-icl-tags" style="margin-top:5px">${c.icl.map(i => `<span class="icl-tag">${i}</span>`).join('')}</div>
       </div>`;
   }).join('');
