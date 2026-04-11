@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ouchilab ヒアリング分析</title>
+<title>ouchilab ヒアリング横断分析</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #fff; color: #333; font-size: 14px; line-height: 1.5; }
@@ -148,39 +148,6 @@ body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #ff
 .score-chip.high { background: #E8F7EF; color: #1E8449; }
 .score-chip.mid { background: #FEF9E7; color: #7D6608; }
 
-/* 課題の深さメーター */
-.depth-meter { margin-bottom: 20px; }
-.depth-summary { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.depth-badge { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 6px; }
-.depth-高 { background: #E8F7EF; color: #1E8449; }
-.depth-中 { background: #FEF9E7; color: #7D6608; }
-.depth-低 { background: #f5f5f3; color: #888; }
-.depth-null { background: #f5f5f3; color: #bbb; font-style: italic; }
-.depth-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.depth-item { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 8px 10px; }
-.depth-item-head { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
-.depth-arrow { font-size: 12px; color: #aaa; }
-.depth-item-val { font-size: 15px; font-weight: 700; color: #1a1a1a; }
-.depth-item-name { font-size: 10px; color: #999; margin-top: 1px; }
-.depth-sdt-tags { display: flex; flex-wrap: wrap; gap: 3px; margin: 4px 0 2px; }
-.depth-sdt-tag { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 4px; background: #EAF3FB; color: #185FA5; }
-.tip { position: relative; display: inline-flex; cursor: help; }
-.tip-icon { font-size: 11px; color: #ccc; line-height: 1; }
-.tip-icon:hover { color: #888; }
-.tip::after {
-  content: attr(data-tip);
-  display: none; position: absolute; top: 130%; left: 50%; transform: translateX(-50%);
-  background: #222; color: #fff; font-size: 11px; padding: 6px 10px; border-radius: 6px;
-  white-space: normal; z-index: 200; width: 200px; line-height: 1.55; pointer-events: none;
-}
-.tip:hover::after { display: block; }
-/* 左カード depth chip */
-.cl-depth { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-top: 5px; display: inline-block; }
-.cl-depth-高 { background: #E8F7EF; color: #1E8449; }
-.cl-depth-中 { background: #FEF9E7; color: #7D6608; }
-.cl-depth-低 { background: #f5f5f3; color: #888; }
-.cl-depth-null { background: #f5f5f3; color: #ccc; }
-
 /* ヘルプモーダル */
 .modal-overlay {
   display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
@@ -260,55 +227,55 @@ const ICL = {
   'ICL-1': {
     label: '疲弊状態での強制調理',
     thickness: 'T2厚（9名以上の事実+インサイト双方に根拠。CL-B・CL-Cの核心インサイト）',
-    n: 9, t2: 12, sdt: 2, causal: 4, sdtA: true, sdtC: true, sdtR: false,
+    n: 9, t2: 12,
     desc: '「仕事中は自律的な環境（集中・評価あり）→ 帰宅で一切のコントロールを失う」という環境変化が、 心理的急降下（スコア8→1）を生み出す。その直後に「料理だけはサボれない（P-005）」という義務感が発動し、 最低パフォーマンス状態で最大負荷タスクを義務的に遂行する構造が固定化している。 問題は「料理が嫌い」ではなく「疲弊時の強制」であることを、P-009の「朝・土日は苦にならない」発言が証明している。'
   },
   'ICL-2': {
     label: '朝の家族システム起動係',
     thickness: 'T2厚（CL-Aの10名全員に潜在。「代替を求めない沈黙」が内面化の証拠）',
-    n: 8, t2: 9, sdt: 3, causal: 3, sdtA: true, sdtC: true, sdtR: true,
+    n: 8, t2: 9,
     desc: '朝の40〜60分という固定枠に「子供の支度抵抗×複数同時タスク」が重なり、 「早くして」を繰り返す摩擦が恒常化する。この状況を誰かに交代させるという選択肢が 語られないという「沈黙」は、親が「自分がやるべき役割」として朝の家族起動を内面化していることを示す。 摩擦に伴う罪悪感は二次消耗となって精神的余剰をさらに削る。'
   },
   'ICL-3': {
     label: '外注の罪悪感と教育的正当化',
     thickness: 'T2中厚（価格感度が外注罪悪感の代替表現という構造解釈。P-006の転換が証拠）',
-    n: 7, t2: 9, sdt: 3, causal: 3, sdtA: true, sdtC: true, sdtR: true,
+    n: 7, t2: 9,
     desc: '「料理=母親の責任」という社会規範の内面化が、外部サービスの「価格が高い」という言語化の背後に潜んでいる。 価格感度は実は「外注への自己正当化コスト」の代替表現であり（INS-M-011）、 「時間をお金で買う」という言語化を完了した対象者（P-006）は継続意向が高く、 未完了の対象者（P-005, P-010）は価格に敏感なまま。 この心理的障壁を突破する鍵は「教育的価値の付加」であり（INS-M-017）、 「家事外注」ではなく「子供の学び場の提供」というフレームが罪悪感を中和する。'
   },
   'ICL-4': {
     label: 'サービス試行・離脱サイクル',
     thickness: 'T2中厚（離脱理由2系統が複数名で一致。成功条件もCL-Nから逆算可能）',
-    n: 6, t2: 8, sdt: 2, causal: 2, sdtA: true, sdtC: false, sdtR: true,
+    n: 6, t2: 8,
     desc: '外部サービス利用経験者の多くが「試行→離脱→別手段」というサイクルを経験している。 離脱理由は2系統に収束：①担当者変更・供給不安定（P-003, P-009）、②親に前提作業が必要（P-008, P-012）。 いずれも「頼んだのに頼めない」という構造的矛盾であり、一度信頼が崩れると回復が難しい非対称性がある。 逆に、「完成品+柔軟性」（P-012のつくりおき.jp継続）や「相性マッチング」（P-009の2年継続）が 成功条件として機能することが確認されている。'
   },
   'ICL-5': {
     label: '子供の食拒否と調理徒労感',
     thickness: 'T2中（7名だが一部提示後。「子供と一緒に作れば食べる」仮説は要検証）',
-    n: 7, t2: 6, sdt: 3, causal: 3, sdtA: true, sdtC: true, sdtR: true,
+    n: 7, t2: 6,
     desc: '子供が食べないという体験は「料理の手間が無意味化される」という感情的ダメージを与え、 調理意欲の低下とサービス離脱の両方を引き起こす。 にもかかわらず「子供に食べてもらうこと=愛情の証明」という動機が、 別調理を止められなくする執着を生む（P-012: 30分別調理の継続）。 「子供と一緒に作れば食べる」という仮説（P-007）は、この課題への解法として新サービスに組み込まれており、 サービス継続率に直結する重要な検証課題でもある。'
   },
   'ICL-6': {
     label: '配偶者不参加の内面化',
     thickness: 'T2厚（11名の共通構造。「夫を変えない」という能動的諦めが全員に共通）',
-    n: 11, t2: 11, sdt: 3, causal: 3, sdtA: true, sdtC: true, sdtR: true,
+    n: 11, t2: 11,
     desc: '全12名中11名で配偶者の家事分担について「詳細が語られない」という共通の沈黙がある。 語る対象者（P-006: 9割本人・1割夫）でさえ改善要求を提示せず「やることボード」で自己対処する。 「夫を変える」という選択肢を放棄し、外部サービスを「隠れて導入する（P-003）」か 「自分の工夫で対処する」に帰結する消極的適応が蓄積している。 この「適応」は表面上は機能しているように見えるが、 一方的な負荷集中・精神的消耗として潜在的ペインとして蓄積し続けている。'
   },
   'ICL-7': {
     label: '食育・料理体験への意思と専門家委譲欲求',
     thickness: 'T2中厚（7名・意思は真正だが時間制約/感情制約が実行を阻む）',
-    n: 7, t2: 9, sdt: 3, causal: 2, sdtA: true, sdtC: true, sdtR: true,
+    n: 7, t2: 9,
     desc: '「子供に料理・食育体験をさせたい」という意思を持ちながら、 時間制約（P-005: 仕事復帰後断念）または感情的余裕の欠如（P-004: ガミガミ怒ってしまう） によって実行できない状態が複数名に共通する。 入口は異なるが——P-005は「実践していたが失った」、P-004は「やりたいが感情的にできない」、 P-001・P-006・P-010は「子供の関心に応えられていない（平日は余裕がない）」—— いずれも「自分ではなく専門家に任せたい」という委譲欲求として着地している点が共通する。 P-001は「手伝ってもらうと余計時間がかかりイライラ（平日）、週末なら許容できる」という発話であり、 食育を否定しているのではなく時間制約型の実行不可能状態を示している。新サービスへの反応も「同感しかしない」と最強の共感。'
   },
   'ICL-8': {
     label: '献立決定の事前儀式化（ICL-1に統合済み）',
     thickness: 'T3中（ICL-1の補足。独立クラスタとしては薄い）',
-    n: 4, t2: 4, sdt: 1, causal: 2, sdtA: true, sdtC: false, sdtR: false,
+    n: 4, t2: 4,
     desc: '帰宅後の心理的急降下（ICL-1）を予知しているため、移動中に「何を作るか」を決めておく行為が 「帰宅後の不確実性を事前に除去する心理的準備」として機能している。 「クックパッドタイム」という命名は、この行動が儀式化・習慣化されていることを示す。 単なる献立決定ではなく、帰宅後のコントロール感の先行投資という構造を持つ。'
   },
   'ICL-9': {
     label: '三者トレードオフの固定化',
     thickness: 'T2厚（就寝時間・自分時間・家事完遂の3目標が構造的に両立不可）',
-    n: 7, t2: 8, sdt: 3, causal: 4, sdtA: true, sdtC: true, sdtR: true,
+    n: 7, t2: 8,
     desc: '親は「子供を早く寝かせたい（20:30目標）」「家事を完遂したい（義務感）」「自分の時間もほしい（飢餓感）」という 三つの相互排他的な目標を同時に持ち、どれかを諦める選択を回避している。 この回避が、フリータイムゼロ・就寝時間遅延・慢性疲労という三重の損失をもたらしている。 解決策への障壁は、「完璧な母親像（子供の健康×家事完遂）への執着」という規範的動機（INS-M-016）である。 外部からの指摘（P-001: 先生から発育への影響を指摘）という「第三者による優先順位の再設定」が トレードオフの固定化を解除する唯一のトリガーになりえる。'
   },
 };
@@ -896,7 +863,7 @@ const CLUSTERS = [
   {
     id: 'CL-F', label: '洗い物・後片付けへの強い嫌悪', q: '左下', stars: 1,
     n: 3, freq: 25,
-    scores: { freq: '中', depth: '低', unmet: '中' },
+    scores: { freq: '中', depth: '高', unmet: '中' },
     icl: [],
     quotes: [
       { text: '最も嫌いな家事: 洗い物(油汚れ、特にカレーや揚げ物の後片付け)', attr: 'P-03（33タスカジさん）' },
@@ -1051,47 +1018,6 @@ function scoreClass(v) {
   return '';
 }
 
-function computeDepth(cluster) {
-  if (!cluster.icl || cluster.icl.length === 0) return null;
-  let maxLevel = -1, totalT2 = 0, totalCards = 0, maxSdt = 0, maxCausal = 0;
-  for (const iid of cluster.icl) {
-    const icl = ICL[iid];
-    if (!icl) continue;
-    const cards = ICL_CARDS[iid] || [];
-    totalT2 += icl.t2 || 0;
-    totalCards += cards.length;
-    maxSdt = Math.max(maxSdt, icl.sdt || 0);
-    maxCausal = Math.max(maxCausal, icl.causal || 0);
-    const sdt = icl.sdt || 0, causal = icl.causal || 0;
-    const level = (sdt === 3 && causal >= 3) ? 2 : (sdt === 3 || causal >= 3) ? 1 : 0;
-    maxLevel = Math.max(maxLevel, level);
-  }
-  if (maxLevel === -1) return null;
-  // SDT脅威の内訳（ICLの明示フラグから集約）
-  const sdtFlags = { A: false, C: false, R: false };
-  for (const iid of cluster.icl) {
-    const icl = ICL[iid];
-    if (!icl) continue;
-    if (icl.sdtA) sdtFlags.A = true;
-    if (icl.sdtC) sdtFlags.C = true;
-    if (icl.sdtR) sdtFlags.R = true;
-  }
-  const sdtItems = [
-    sdtFlags.A ? '自律性（自分で決められない）' : null,
-    sdtFlags.C ? '有能感（役割を果たせていない）' : null,
-    sdtFlags.R ? '関係性（家族・社会とのつながり）' : null,
-  ].filter(Boolean);
-
-  return {
-    label: ['低', '中', '高'][maxLevel],
-    t2: totalT2,
-    saturation: totalCards > 0 ? Math.round(totalT2 / totalCards * 100) : 0,
-    sdt: maxSdt,
-    sdtItems,
-    causal: maxCausal
-  };
-}
-
 function renderGrid() {
   const grid = document.getElementById('clusterGrid');
   grid.innerHTML = CLUSTERS.map(c => {
@@ -1107,12 +1033,7 @@ function renderGrid() {
         </div>
         <div class="cl-name">${c.label}</div>
         <div class="cl-stat">${c.n}名 / 12名</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
-          <span class="score-chip">確認：${c.n}名 / ${c.freq}%</span>
-          <span class="score-chip ${scoreClass(c.scores.depth)}">課題の深さ：${c.scores.depth}</span>
-          <span class="score-chip ${scoreClass(c.scores.unmet)}">未充足度：${c.scores.unmet}</span>
-        </div>
-        <div class="cl-icl-tags" style="margin-top:5px">${c.icl.map(i => `<span class="icl-tag">${i}</span>`).join('')}</div>
+        <div class="cl-icl-tags">${c.icl.map(i => `<span class="icl-tag">${i}</span>`).join('')}</div>
       </div>`;
   }).join('');
 }
@@ -1217,56 +1138,10 @@ function renderDetail(id) {
       <div class="detail-stat">${c.n}名 / 12名</div>
       <div class="score-row">
         <span class="score-chip">確認：${c.n}名 / ${c.freq}%</span>
+        <span class="score-chip ${scoreClass(c.scores.depth)}">課題の深さ：${c.scores.depth}</span>
         <span class="score-chip ${scoreClass(c.scores.unmet)}">未充足度：${c.scores.unmet}</span>
       </div>
     </div>
-
-    ${(function() {
-      const d = computeDepth(c);
-      if (!d) return `<div class="depth-meter"><div class="section-title">課題の深さ</div><div style="font-size:12px;color:#ccc;font-style:italic;padding:8px 0;">計測不能（インサイトクラスタ未紐付け）</div></div>`;
-      return `<div class="depth-meter">
-        <div class="section-title">課題の深さ</div>
-        <div class="depth-summary">
-          <span class="depth-badge depth-${d.label}">${d.label}</span>
-          <span style="font-size:11px;color:#aaa;">SDT=${d.sdt}/3 かつ 因果${d.causal}段 で判定</span>
-        </div>
-        <div class="depth-grid">
-          <div class="depth-item">
-            <div class="depth-item-head">
-              <span class="depth-arrow">⊙</span>
-              <span class="depth-item-val">${d.t2}</span>
-              <span class="tip" data-tip="複数の異なる人から「同じことが起きている」と確認できた証拠の数。1枚＝この事実は1人だけでなく別の人からも確認済み、という意味。数が多いほど根拠が積み上がっている。"><span class="tip-icon">ⓘ</span></span>
-            </div>
-            <div class="depth-item-name">T2根拠数</div>
-          </div>
-          <div class="depth-item">
-            <div class="depth-item-head">
-              <span class="depth-arrow">⊙</span>
-              <span class="depth-item-val">${d.saturation}%</span>
-              <span class="tip" data-tip="集めたインサイト全体のうち、複数人で裏付けられたものの割合。60%を超えると「調べるほど同じことが出てくる＝課題の構造が見えてきた」状態に近い。"><span class="tip-icon">ⓘ</span></span>
-            </div>
-            <div class="depth-item-name">飽和度</div>
-          </div>
-          <div class="depth-item">
-            <div class="depth-item-head">
-              <span class="depth-arrow">⊙</span>
-              <span class="depth-item-val">${d.sdt}/3</span>
-              <span class="tip" data-tip="人が深く傷つくのは「自律性・有能感・関係性」の3つの基本的心理ニーズが脅かされるとき（Deci &amp; Ryan, 1985）。3/3が最も根が深い。"><span class="tip-icon">ⓘ</span></span>
-            </div>
-            <div class="depth-sdt-tags">${d.sdtItems.map(i => `<span class="depth-sdt-tag">${i}</span>`).join('')}</div>
-            <div class="depth-item-name">SDT脅威</div>
-          </div>
-          <div class="depth-item">
-            <div class="depth-item-head">
-              <span class="depth-arrow">⊙</span>
-              <span class="depth-item-val">${d.causal}段</span>
-              <span class="tip" data-tip="「なぜそうなるの？」を繰り返したときの深さ。2段＝症状止まり、4段＝価値観・社会規範レベルまで掘り下げられた状態。深いほど根本的な問題。"><span class="tip-icon">ⓘ</span></span>
-            </div>
-            <div class="depth-item-name">因果階層</div>
-          </div>
-        </div>
-      </div>`;
-    })()}
 
     ${themeInsight ? `<div style="background:#FDECEA;border-left:3px solid #C8102E;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#7B241C;margin-bottom:16px;line-height:1.6;">${themeInsight}</div>` : ''}
 
@@ -1317,7 +1192,6 @@ renderGrid();
     <button class="modal-close" onclick="document.getElementById('helpModal').style.display='none'">✕</button>
     <div class="modal-title">分析記号・凡例</div>
 
-    <!-- トレーサビリティチェーン -->
     <div class="help-section">
       <div class="help-section-title">データの流れ（トレーサビリティチェーン）</div>
       <div class="chain-box">
@@ -1333,129 +1207,45 @@ renderGrid();
       </div>
     </div>
 
-    <!-- 記号一覧 -->
     <div class="help-section">
       <div class="help-section-title">記号の意味</div>
       <table class="help-table">
-        <thead>
-          <tr><th>記号</th><th>正式名称</th><th>何を表すか</th></tr>
-        </thead>
+        <thead><tr><th>記号</th><th>正式名称</th><th>何を表すか</th></tr></thead>
         <tbody>
-          <tr>
-            <td>CL</td>
-            <td>事実クラスタ</td>
-            <td>発話カード（UC）を似た話題でまとめたグループ。「何が起きているか」の事実ベースの塊。</td>
-          </tr>
-          <tr>
-            <td>ICL</td>
-            <td>インサイトクラスタ</td>
-            <td>インサイトカード（INS）をまとめたグループ。「なぜそうなっているか」の因果構造・解釈の束。CLに対応するICLがない場合もある。</td>
-          </tr>
-          <tr>
-            <td>UC</td>
-            <td>発話カード</td>
-            <td>インタビュー原文から切り出した1発話 = 1カード。L1の証拠を保持する最小単位。</td>
-          </tr>
-          <tr>
-            <td>INS</td>
-            <td>インサイトカード</td>
-            <td>複数の発話カードから導いた解釈・洞察。4種類（パターン・矛盾・動機推論・不在）がある。</td>
-          </tr>
-          <tr>
-            <td>BP</td>
-            <td>行動パターン</td>
-            <td>複数の対象者に共通して見られた具体的な行動の型。JTBDと紐づく。</td>
-          </tr>
-          <tr>
-            <td>HMW</td>
-            <td>How Might We</td>
-            <td>「どうすれば〜できるか？」という設計問い。T1〜T3のTierで優先度を表す。</td>
-          </tr>
-          <tr>
-            <td>JTBD</td>
-            <td>Jobs To Be Done</td>
-            <td>対象者が本当に成し遂げようとしていること（表面的な行動の背後にある目的）。</td>
-          </tr>
+          <tr><td>CL</td><td>事実クラスタ</td><td>発話カード（UC）を似た話題でまとめたグループ。「何が起きているか」の事実ベースの塊。</td></tr>
+          <tr><td>ICL</td><td>インサイトクラスタ</td><td>インサイトカード（INS）をまとめたグループ。「なぜそうなっているか」の因果構造・解釈の束。</td></tr>
+          <tr><td>UC</td><td>発話カード</td><td>インタビュー原文から切り出した1発話 = 1カード。</td></tr>
+          <tr><td>INS</td><td>インサイトカード</td><td>複数の発話カードから導いた解釈・洞察。4種類（パターン・矛盾・動機推論・不在）がある。</td></tr>
+          <tr><td>BP</td><td>行動パターン</td><td>複数の対象者に共通して見られた具体的な行動の型。JTBDと紐づく。</td></tr>
+          <tr><td>HMW</td><td>How Might We</td><td>「どうすれば〜できるか？」という設計問い。T1〜T3のTierで優先度を表す。</td></tr>
+          <tr><td>JTBD</td><td>Jobs To Be Done</td><td>対象者が本当に成し遂げようとしていること（表面的な行動の背後にある目的）。</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- バッジ・ラベル -->
     <div class="help-section">
       <div class="help-section-title">バッジ・ラベルの見方</div>
       <table class="help-table">
-        <thead>
-          <tr><th>表示</th><th>意味</th></tr>
-        </thead>
+        <thead><tr><th>表示</th><th>意味</th></tr></thead>
         <tbody>
-          <tr>
-            <td><span class="help-badge" style="background:#FDECEA;color:#922B21;">右上</span></td>
-            <td>最有望ゾーン — 課題の深さ・出現頻度ともに高い。優先的に設計検討に進む。</td>
-          </tr>
-          <tr>
-            <td><span class="help-badge" style="background:#EBF5FB;color:#1A5276;">左上</span></td>
-            <td>追加ヒアリング推奨 — インサイトは深いが対象者数が少ない。サンプルを増やすと確度が上がる。</td>
-          </tr>
-          <tr>
-            <td><span class="help-badge" style="background:#f0f0f0;color:#888;">左下</span></td>
-            <td>低優先 — 出現頻度・深さともに低い。今回のスコープ外として保留。</td>
-          </tr>
-          <tr>
-            <td><span class="help-badge" style="background:#185FA5;color:#fff;">T2</span></td>
-            <td>HMW Tier 2 — 証拠が厚く、今すぐ設計に使える問い（最優先）。</td>
-          </tr>
-          <tr>
-            <td><span class="help-badge" style="background:#C8A84B;color:#fff;">T3</span></td>
-            <td>HMW Tier 3 — 示唆はあるが証拠がやや薄い。参考として保持。</td>
-          </tr>
-          <tr>
-            <td>★★★ / ★★☆ / ★☆☆</td>
-            <td>事実評価（根拠の信頼度）— 複数名の発話＋文脈一致で★3。単名・伝聞・曖昧記憶は★1〜2。</td>
-          </tr>
-          <tr>
-            <td><span class="help-badge" style="background:#E8F8F0;color:#1E8449;">動機推論</span></td>
-            <td>INSカードの種別 — 発話の背後にある動機・感情を推論したカード。</td>
-          </tr>
-          <tr>
-            <td><span class="help-badge" style="background:#F4ECF7;color:#7D3C98;">パターン</span></td>
-            <td>INSカードの種別 — 複数名に繰り返し現れる行動・思考のパターン。</td>
-          </tr>
-          <tr>
-            <td><span class="help-badge" style="background:#FDFEFE;color:#999;border:1px solid #ddd;">矛盾</span></td>
-            <td>INSカードの種別 — 発話間または発話と行動の間に見られる矛盾・葛藤。</td>
-          </tr>
-          <tr>
-            <td>根拠の厚さ：厚い / 中 / 薄い</td>
-            <td>そのICLを支えるINSカード・UCカードの量と質の評価。厚いほど設計判断に使いやすい。</td>
-          </tr>
-          <tr>
-            <td>追加ヒアリング推奨</td>
-            <td>対象者数が少ない（3名以下）または発話カードの証拠が薄く、判断にはデータ追加が必要なクラスタ。</td>
-          </tr>
+          <tr><td><span class="help-badge" style="background:#FDECEA;color:#922B21;">右上</span></td><td>最有望ゾーン — 課題の深さ・出現頻度ともに高い。優先的に設計検討に進む。</td></tr>
+          <tr><td><span class="help-badge" style="background:#EBF5FB;color:#1A5276;">左上</span></td><td>追加ヒアリング推奨 — インサイトは深いが対象者数が少ない。</td></tr>
+          <tr><td><span class="help-badge" style="background:#f0f0f0;color:#888;">左下</span></td><td>低優先 — 出現頻度・深さともに低い。今回のスコープ外として保留。</td></tr>
+          <tr><td><span class="help-badge" style="background:#185FA5;color:#fff;">T2</span></td><td>HMW Tier 2 — 証拠が厚く、今すぐ設計に使える問い（最優先）。</td></tr>
+          <tr><td><span class="help-badge" style="background:#C8A84B;color:#fff;">T3</span></td><td>HMW Tier 3 — 示唆はあるが証拠がやや薄い。参考として保持。</td></tr>
+          <tr><td>追加ヒアリング推奨</td><td>対象者数が少ない（3名以下）または発話カードの証拠が薄いクラスタ。</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- スコア説明 -->
     <div class="help-section">
       <div class="help-section-title">スコアの読み方</div>
       <table class="help-table">
-        <thead>
-          <tr><th>スコア</th><th>意味</th></tr>
-        </thead>
+        <thead><tr><th>スコア</th><th>意味</th></tr></thead>
         <tbody>
-          <tr>
-            <td>確認：X名 / X%</td>
-            <td>このクラスタの話題が登場した対象者数と全体に対する出現頻度。</td>
-          </tr>
-          <tr>
-            <td>課題の深さ</td>
-            <td>発話の感情強度・反復度・文脈の重さから判定。◎&gt;○&gt;△の3段階。</td>
-          </tr>
-          <tr>
-            <td>未充足度</td>
-            <td>現在の解決策（あれば）への不満度・回避行動の強さから判定。高いほど設計余地が大きい。</td>
-          </tr>
+          <tr><td>確認：X名 / X%</td><td>このクラスタの話題が登場した対象者数と全体に対する出現頻度。</td></tr>
+          <tr><td>課題の深さ</td><td>発話の感情強度・反復度・文脈の重さから判定。高／中／低の3段階。</td></tr>
+          <tr><td>未充足度</td><td>現在の解決策への不満度・回避行動の強さから判定。高いほど設計余地が大きい。</td></tr>
         </tbody>
       </table>
     </div>
