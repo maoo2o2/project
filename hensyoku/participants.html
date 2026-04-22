@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>参加者一覧 | 子どもの偏食</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+       background: #fff; color: #1e293b; font-size: 14px; line-height: 1.6; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Header ── */
+.page-header { padding: 20px 24px 0; max-width: 1440px; margin: 0 auto; }
+.back-link { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 10px; }
+.back-link:hover { color: #475569; }
+.hdr-row { display: flex; align-items: baseline; gap: 16px; }
+.hdr-row h1 { font-size: 22px; font-weight: 700; }
+.hdr-meta { font-size: 13px; color: #94a3b8; }
+
+/* ── Tab nav ── */
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid #e2e8f0; margin-top: 16px; }
+.tab-btn { font-size: 13px; padding: 10px 20px; cursor: pointer; color: #64748b;
+           border-bottom: 2px solid transparent; margin-bottom: -1px;
+           transition: color .15s, border-color .15s; user-select: none; }
+.tab-btn:hover { color: #1e293b; }
+.tab-btn.active { color: #e53e3e; border-bottom-color: #e53e3e; font-weight: 600; }
+
+/* ── KPI row ── */
+.kpi-row { display: flex; gap: 28px; padding: 14px 24px; max-width: 1440px;
+           margin: 0 auto; flex-wrap: wrap; border-bottom: 1px solid #f1f5f9; }
+.kpi-item { font-size: 13px; color: #64748b; }
+.kpi-item strong { font-size: 22px; font-weight: 800; color: #1e293b; margin-right: 3px; }
+
+/* ── Filter pills ── */
+.filter-row { display: flex; align-items: center; gap: 8px;
+              padding: 10px 24px 8px; max-width: 1440px; margin: 0 auto;
+              font-size: 12px; color: #64748b; }
+.pill { font-size: 12px; padding: 4px 14px; border-radius: 99px;
+        border: 1.5px solid #e2e8f0; background: #fff; color: #475569;
+        cursor: pointer; transition: all .15s; }
+.pill.active { background: #fff5f5; border-color: #e53e3e; color: #e53e3e; font-weight: 600; }
+.pill:hover:not(.active) { background: #f8fafc; }
+
+/* ── Main split ── */
+.main-split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.5fr);
+              max-width: 1440px; margin: 0 auto; min-height: 80vh; }
+
+/* ── Cluster grid (left) ── */
+.cl-grid { padding: 12px; display: grid; grid-template-columns: 1fr 1fr;
+           gap: 8px; border-right: 1px solid #e2e8f0; align-content: start; }
+.cl-card { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px;
+           cursor: pointer; transition: border-color .15s; }
+.cl-card:hover { border-color: #94a3b8; }
+.cl-card.selected { border-color: #e53e3e !important; }
+.cl-card .cid    { font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px; }
+.cl-card .cname  { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.4; margin-bottom: 4px; }
+.cl-card .ccount { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+.cl-card .cpills { display: flex; gap: 4px; flex-wrap: wrap; }
+.icl-pill { font-size: 11px; padding: 2px 8px; border-radius: 99px;
+            background: #dbeafe; color: #1e40af; font-weight: 600; }
+.followup-pill { font-size: 11px; padding: 2px 8px; border-radius: 99px;
+                 background: #fff7ed; color: #c2410c; font-weight: 600; }
+
+/* ── Detail panel (right) ── */
+.detail-panel { padding: 20px 24px; position: sticky; top: 0;
+                max-height: 100vh; overflow-y: auto; }
+.empty-state { display: flex; flex-direction: column; align-items: center;
+               justify-content: center; height: 320px; color: #94a3b8; font-size: 13px; gap: 8px; }
+
+/* ── Detail content ── */
+.det-id    { font-size: 12px; color: #94a3b8; margin-bottom: 2px; }
+.det-name  { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.det-count { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+.score-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.sb { font-size: 11px; padding: 3px 10px; border-radius: 6px; }
+.sb-freq        { background: #dbeafe; color: #1e40af; }
+.sb-depth-高    { background: #dcfce7; color: #166534; }
+.sb-depth-中    { background: #fef3c7; color: #92400e; }
+.sb-depth-低    { background: #f1f5f9; color: #475569; }
+.sb-unmet-高    { background: #fee2e2; color: #991b1b; }
+.sb-unmet-中    { background: #fff7ed; color: #c2410c; }
+.sb-unmet-低    { background: #f1f5f9; color: #475569; }
+
+/* ── Core insight highlight ── */
+.core-insight { border-left: 3px solid #e53e3e; background: #fff5f5;
+                border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: 16px;
+                font-size: 13px; color: #1e293b; line-height: 1.6; }
+
+/* ── Section title ── */
+.sec-title { font-size: 11px; font-weight: 700; color: #94a3b8;
+             text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 8px; }
+
+/* ── Quotes ── */
+.quote-wrap { display: flex; flex-direction: column; gap: 8px; }
+.quote-card { border-left: 3px solid #3b82f6; padding: 10px 14px; background: #f8fafc;
+              border-radius: 0 6px 6px 0; }
+.quote-card .qt { font-size: 13px; color: #334155; }
+.quote-card .qs { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+/* ── ICL cards ── */
+.icl-card { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+.icl-hdr  { display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+            background: #f8fafc; cursor: pointer; }
+.icl-hdr:hover { background: #f1f5f9; }
+.icl-hdr .iid    { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+                   background: #dbeafe; color: #1e40af; white-space: nowrap; }
+.icl-hdr .ilabel { font-size: 13px; font-weight: 600; flex: 1; }
+.icl-hdr .imeta  { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+.icl-body { padding: 12px 14px; border-top: 1px solid #f1f5f9; display: none; }
+.icl-body.open { display: block; }
+.icl-desc   { font-size: 12px; color: #475569; margin-bottom: 10px; line-height: 1.6; }
+.icl-struct { font-size: 11px; color: #475569; white-space: pre-wrap; font-family: monospace;
+              background: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+.root-cards-link { font-size: 12px; color: #3b82f6; display: flex; align-items: center; gap: 4px; }
+
+/* ── Resolution grid ── */
+.res-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+.res-cell { text-align: center; background: #f1f5f9; border-radius: 6px; padding: 6px 4px; }
+.res-axis { font-size: 10px; color: #64748b; }
+.res-val  { font-size: 16px; }
+
+/* ── Depth score ── */
+.depth-section { margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+.depth-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+                background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
+.depth-header > span:first-child { font-size: 11px; font-weight: 700; color: #475569; }
+.depth-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: auto; }
+.depth-metrics { display: grid; grid-template-columns: repeat(4, 1fr); }
+.depth-metric { padding: 8px 10px; border-right: 1px solid #f1f5f9; position: relative; }
+.depth-metric:last-child { border-right: none; }
+.dm-val   { font-size: 15px; font-weight: 800; }
+.dm-label { font-size: 10px; color: #64748b; margin-top: 1px; }
+.dm-sub   { font-size: 9px; color: #94a3b8; }
+.tip { position: relative; display: inline-block; cursor: help; }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b; color: #f8fafc; font-size: 11px;
+  line-height: 1.5; padding: 6px 10px; border-radius: 6px;
+  white-space: pre-wrap; width: 220px; z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+}
+.tip:hover::after { opacity: 1; }
+
+/* ── BP card ── */
+.bp-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+.bp-hdr  { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bp-id   { font-size: 11px; font-weight: 700; color: #94a3b8; }
+.bp-name { font-size: 13px; font-weight: 600; flex: 1; }
+.bp-n    { font-size: 12px; color: #64748b; }
+.bp-jtbd { font-size: 12px; font-style: italic; color: #475569;
+           background: #fffbeb; border-left: 3px solid #f59e0b;
+           padding: 8px 12px; border-radius: 0 6px 6px 0; }
+
+/* ── HMW card ── */
+.hmw-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+.hmw-id  { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+.hmw-q   { font-size: 13px; font-weight: 600; color: #1e293b; }
+.hmw-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; display: inline-block; }
+.badge-blue   { background: #dbeafe; color: #1e40af; }
+.badge-amber  { background: #fef3c7; color: #92400e; }
+.badge-gray   { background: #f1f5f9; color: #475569; }
+
+/* ── Tab content ── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── 発話タブ ── */
+.utt-split { display: grid; grid-template-columns: 200px 1fr;
+             max-width: 1440px; margin: 0 auto; min-height: 80vh; }
+.chip-list { padding: 10px 8px; border-right: 1px solid #e2e8f0;
+             display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 85vh; }
+.chip { display: flex; flex-direction: column; align-items: flex-start;
+        padding: 8px 12px; border-radius: 8px; border: none; background: transparent;
+        text-align: left; cursor: pointer; font-size: 13px; color: #475569;
+        transition: background .15s; width: 100%; }
+.chip:hover { background: #f1f5f9; }
+.chip.active { background: #fff5f5; color: #e53e3e; }
+.chip-sub { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+.chip.active .chip-sub { color: #e53e3e; opacity: .7; }
+.utt-panels { overflow-y: auto; max-height: 85vh; }
+.utt-panel { padding: 20px 24px; display: none; }
+.utt-panel.active { display: block; }
+.utt-phead { margin-bottom: 14px; }
+.utt-pname { font-size: 16px; font-weight: 700; }
+.utt-seg   { font-size: 12px; color: #64748b; margin-top: 2px; }
+.utt-cnt   { font-size: 11px; color: #94a3b8; }
+.ucards-wrap { display: flex; flex-direction: column; gap: 8px; }
+.ucard { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; }
+.ucard-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.cred-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;
+              white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.cA { background: #dcfce7; color: #166534; }
+.cB { background: #dbeafe; color: #1e40af; }
+.cC { background: #fef3c7; color: #92400e; }
+.cD { background: #f1f5f9; color: #64748b; }
+.ucard-main { flex: 1; }
+.ucard-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.ucard-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.utag { font-size: 10px; padding: 1px 6px; border-radius: 99px;
+        background: #f1f5f9; color: #64748b; }
+.ucard-quote { font-size: 13px; color: #334155; margin: 8px 0 6px; line-height: 1.55; }
+.ucard-foot { display: flex; gap: 10px; font-size: 11px; color: #94a3b8; }
+
+/* ── Participants page ── */
+.p-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 12px; padding: 20px 24px; max-width: 1440px; margin: 0 auto; }
+.p-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; }
+.p-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.p-meta { font-size: 11px; color: #64748b; margin-bottom: 6px; }
+.p-sit  { font-size: 12px; color: #475569; border-top: 1px solid #f1f5f9; padding-top: 6px; }
+.p-clusters { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="dashboard.html" class="back-link">← ダッシュボードに戻る</a>
+  <div class="hdr-row">
+    <h1>参加者一覧</h1>
+    <span class="hdr-meta">N=15名</span>
+  </div>
+  <div class="tab-nav">
+    <span class="tab-btn active" data-tab="all">全参加者</span>
+  </div>
+</div>
+<div class="p-grid">
+<div class="p-card">
+  <h3>P-001</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>子どもが2歳ごろから白米以外食べなくなった。スナック系のおやつは食べられる。家でも保育園でも同じ傾向。保育園からは「食事に興味がない」と言われる。3歳半ごろから少しずつ食べられる食材が増えていき、4歳ごろでは自分から食べることも増えてきた。</li><li>栄養の偏りが心配</li><li>ネット検索すると栄養不足→情緒不安定、発達不足などの不安も煽られる</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-B</span><span class="badge badge-blue">CL-B</span><span class="badge badge-blue">CL-C</span><span class="badge badge-blue">CL-D</span><span class="badge badge-blue">CL-E</span><span class="badge badge-blue">CL-E</span><span class="badge badge-blue">CL-H</span></div>
+</div>
+<div class="p-card">
+  <h3>P-002</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。キーマカレー、餃子で細かく刻むと食べている。最近やっとミニトマトが食べられるようになった。小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。平日はママ、週末はパパが料理する。</li><li>いつかは野菜を食べるようになってほしい。食べ物の美味しさを楽しめるようになってほしい。自分も好き嫌いが多かったから余計そう思う。</li><li>野菜炒めなどを作っても、野菜だけ残す。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-A</span><span class="badge badge-blue">CL-D</span><span class="badge badge-blue">CL-D</span><span class="badge badge-blue">CL-F</span></div>
+</div>
+<div class="p-card">
+  <h3>P-003</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。キーマカレー、餃子で細かく刻むと食べている。最近やっとミニトマトが食べられるようになった。小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。平日はママ、週末はパパが料理する。</li><li>炭水化物と肉しか食べないから太る、風邪をひきやすい</li><li>野菜を食べてほしいが、イヤイヤ食べてほしいわけではない。野菜ジュースやおやつを与えるくらいなら、食べなくていい。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-A</span><span class="badge badge-blue">CL-F</span></div>
+</div>
+<div class="p-card">
+  <h3>P-004</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>2人目の小３息子（9歳）が離乳食の時から偏食だった。お粥や白ご飯は食べるが、野菜やお肉に手を出さない。マヨネーズやドレッシングも嫌い。少しずつ食べるものが増えてきてはいるが、イヤイヤ食べている。食事に1時間以上かかる。</li><li>食べるメニューが決まっていてお弁当など困る</li><li>食事に時間がかかる</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-C</span><span class="badge badge-blue">CL-D</span><span class="badge badge-blue">CL-E</span><span class="badge badge-blue">CL-H</span><span class="badge badge-blue">CL-I</span></div>
+</div>
+<div class="p-card">
+  <h3>P-005</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>1人目の中３息子が離乳食の時から偏食ぎみで今も食べるものの方が少ない。魚や葉物野菜は全般だめ。スローペースだが少しずつ食材は増えていて、この1年で納豆が食べられるようになった。給食も主食しか食べない日が多い。初めてのものは基本的に食べず、パパママが出したものだけ食べる。2人目3人目の娘はなんでも欲しがって食べる。料理はパパママ半々でパパの方が栄養は気にしているかも。</li><li>みんな同じメニューで食事を出せない。兄弟の年齢が近いので、早い時期から食事のばらつきに困っていた。同じメニューでも1人1人に合わせて具材や盛り付けを若干変える必要がある。</li><li>ミールキットは便利だから使えるなら使いたかった。食べないと困るし、+αで食べるメニューを準備するのが目に見えているから使わなかった。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-A</span><span class="badge badge-blue">CL-G</span><span class="badge badge-blue">CL-H</span><span class="badge badge-blue">CL-I</span><span class="badge badge-blue">CL-J</span></div>
+</div>
+<div class="p-card">
+  <h3>P-006</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>子供の要望、栄養バランス、値段、親の満足を両立できる献立を考えること。短時間である程度手の込んだ子供でも食べれるもの。</li><li>全部考えるとレパートリーが少ないので親が飽きる。タスクが多いから最初はめちゃくちゃしんどかった。</li><li>子供の好みの幅を広げたいけど、レシピ検索だと同じようなものが多いので不満。プロ向けのレシピ本を見て、それをきっかけに近いレシピを探している。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-D</span><span class="badge badge-blue">CL-E</span><span class="badge badge-blue">CL-I</span></div>
+</div>
+<div class="p-card">
+  <h3>P-007</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>離乳食は何でも食べたが、2歳過ぎから好き嫌いがはっきりしてきた。たぶん食感に敏感で、ナス、キノコ、繊維質の肉は食べない。丸のみする傾向があるから。4歳から「ぐにゅっとした食感が嫌いなの？」「うん」と言葉で確認できるようになった。最近は一口だけでも食べてくれたりする。Oisixを使っていて、子供が好きな味や食材ではないので食べなかった。育休中にやめて、自分で献立考えると食べるようになってきた。今は子供が食べるメニューで1週間分の献立を7種類持っている。それを回しているので復職しても何とかなりそう。</li><li>3歳くらいの夕食で何も食べず、ふりかけごはんだけ食べる時期は栄養面が心配だった。</li><li>夕食（毎日）。朝は子供がすんなり食べるものにする。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-B</span><span class="badge badge-blue">CL-C</span><span class="badge badge-blue">CL-F</span><span class="badge badge-blue">CL-F</span><span class="badge badge-blue">CL-G</span></div>
+</div>
+<div class="p-card">
+  <h3>P-008</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>栄養が不安。好き嫌いあるが、野菜も声掛けすれば食べるのでそこまで困らない。本当は良くないと思うが、「お姫様になれないよ」と声掛けする。ただ、食べる量にムラがあるので栄養が不安。ピーマンは欠片しか食べない。食べる野菜は決まっていて、キャベツ、人参、ブロッコリー、玉ねぎ。苦いから嫌、変な味がする、程度の会話はできる。流暢な会話はまだできない。</li><li>時間がなくて1品作るのに精いっぱい。子供の栄養バランスが足りているのか不安になる。不足しやすい鉄分とか、免疫に必要な栄養とか。鉄不足＝ほうれん草、くらいの知識なので、ビタミンとかになると食材選びが難しい。できれば自然に栄養取りたいのでサプリは使用しない。子供が生まれてからは添加物も気にするようになった。</li><li>夕食（毎日）</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-B</span><span class="badge badge-blue">CL-C</span><span class="badge badge-blue">CL-G</span><span class="badge badge-blue">CL-J</span></div>
+</div>
+<div class="p-card">
+  <h3>P-009</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>料理は奥さんがする</li><li>上の子が野菜パン、納豆しか食べなかった。体が小さくて、栄養不足なのか不安だった。健診で低身長を指摘され、成長ホルモンが足りないとわかった。離乳食から偏食ぎみ。幼稚園に通いだして、給食だと食べることがわかった。本人は「嫌だけど頑張って食べている」と言う。年長になると嫌な理由がいえるようになってきた。</li><li>食べないせいで体が小さいのではと不安な時期は栄養士に相談もして、できる工夫は一通りやったがだめだった。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-B</span><span class="badge badge-blue">CL-E</span><span class="badge badge-blue">CL-F</span><span class="badge badge-blue">CL-G</span><span class="badge badge-blue">CL-J</span></div>
+</div>
+<div class="p-card">
+  <h3>P-010</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>3人目が2歳で食べない。食べムラ、好きなものだけ食べる、全然手を付けないことがあり、毎日攻防戦をしている。ある程度進めて食べなければ諦めて、泣く泣く捨てる。保育園の給食は何でも食べているようなので、そこで栄養摂っていると信じて神経質にならないようにしている。周りが食べていると食べるのかも。3人とも好き嫌いはあって年中、年長で食べるようになってきたので、今は食べない時期と思っている。1人目の時は特にこんなんでいいのかという不安が強かった。子供用に食事を作ることはなく、家族分を取り分けて刻むくらい。</li><li>夕食（毎日）</li><li>なるべく深刻にならないように、気楽に考えるようにしている</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-A</span><span class="badge badge-blue">CL-C</span><span class="badge badge-blue">CL-G</span><span class="badge badge-blue">CL-H</span></div>
+</div>
+<div class="p-card">
+  <h3>P-011</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>2歳息子が好き嫌いが多い。離乳食の時から肉を食べず、果物も数品しか食べない。苦手な食感がありそう、濃い味が好きそうだと何となく感じている。野菜関係の仕事なので、初めは野菜好きになってほしいと思っていたが、子供が好きな食べ物はカレー、からあげ、ヨーグルト。素材の味を伝えるとかは諦めた。肉は食べないが、大豆製品やヨーグルトは好きなので栄養の偏りまでは心配していない。今は毎日バナナ、3食ヨーグルト食べている。保育園では食べているみたいで、友達や親の食べ物を欲しがることがあるから、周囲の影響が大きいのかも。</li><li>食べてほしい気持ちはあるが、やる気自信喪失しても嫌なので頑張りすぎない。食べてほしくて頑張ったものほど食べず、お惣菜はすんなり食べたりする。やる気喪失してしまうので、あまり頑張らないようにしている。</li><li>夫婦ともに「なんでも食べてほしい」までのモチベーションはないので、まあいいかと諦めている。身近な友人、保育士さんを参考にしながら安心したり育児に取り入れたりする。インスタとか見ると、キラキラした情報が多い。きれいな食事の写真で食べたという投稿を見ると、「自分と遠い」と感じて自信がなくなるので見ないようにしている。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-A</span><span class="badge badge-blue">CL-F</span></div>
+</div>
+<div class="p-card">
+  <h3>P-012</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>長男は好きなものはすごく食べるが偏る、下の子は何でも食べる。長男が1人の頃は1対1で食べさせてきて、拘りが強いので今も食が偏り悩んでいる。タンパク質＋炭水化物が好き（ミートパスタ、カレー、牛丼）。副菜は食べない。野菜はトマトだけ食べる。たまに親が食べているものを食べたりもするので、嫌いなものもめげずに出すがなかなか広がらない。子供から嫌いなのになんで出すんだと言われる。日々バランスを考えて食事作るのが大変。夫から提案された野菜ジュースを飲ませて少し安心感を得ている。</li><li>夕食（毎日）</li><li>たまに食べる瞬間を期待している</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-C</span><span class="badge badge-blue">CL-F</span><span class="badge badge-blue">CL-H</span><span class="badge badge-blue">CL-J</span></div>
+</div>
+<div class="p-card">
+  <h3>P-013</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>14歳息子が小さいころから嫌いなものが多く小食。今でも生野菜、根菜、固い肉魚が嫌い。</li><li>小中学生になってくると、体格が小さいことがいじめにつながったりする。とにかく大きくなってほしくて食育やサプリを試した。</li><li>1歳の頃から本格レストランに子供を連れて行った。（アラペサ、ルクール）親が美味しいものを食べたい気持ちもあったが、そういう店だと食べることがあった。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-B</span></div>
+</div>
+<div class="p-card">
+  <h3>P-014</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>3歳娘が好き嫌いある程度ある。深刻に悩むわけではなく、家庭で親子料理を楽しんでいる。</li><li>パン作り、ピザづくりなど子供と一緒にやる</li><li>内容次第で検討する。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-E</span></div>
+</div>
+<div class="p-card">
+  <h3>P-015</h3>
+  <ul style='margin-top:8px;padding-left:16px;font-size:12px;color:#475569'><li>偏食が始まってきた。保育園では食べているようだが、家では食べないことが多い。</li><li>夜に次の日の晩御飯を作っておく。子供のために細かく野菜を刻むのが手間。</li><li>親子レストランは金額考慮しても「ぜひ」使いたい。頻度は月1くらい。</li></ul>
+  <div class="p-clusters" style="margin-top:8px"><span class="badge badge-blue">CL-A</span></div>
+</div></div>
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('tab-' + name);
+  const btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+  if (sec) sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function selectCluster(cid) {
+  document.querySelectorAll('.cl-card').forEach(c => c.classList.remove('selected'));
+  const card = document.querySelector('.cl-card[data-id="' + cid + '"]');
+  if (card) card.classList.add('selected');
+  const empty = document.getElementById('det-empty');
+  if (empty) empty.style.display = 'none';
+  document.querySelectorAll('.cluster-det').forEach(d => d.style.display = 'none');
+  const det = document.getElementById('det-' + cid);
+  if (det) det.style.display = 'block';
+}
+
+function toggleICL(uid) {
+  const body = document.getElementById('icl-body-' + uid);
+  if (body) body.classList.toggle('open');
+}
+
+function filterClusters(mode, btn) {
+  document.querySelectorAll('.filter-row .pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.cl-card').forEach(card => {
+    card.style.display = (mode === 'all' || card.dataset.followup === '1') ? '' : 'none';
+  });
+}
+
+function selectPerson(pid) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  const chip = document.getElementById('chip-' + pid);
+  if (chip) chip.classList.add('active');
+  document.querySelectorAll('.utt-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('utt-' + pid);
+  if (panel) panel.classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const first = document.querySelector('.cl-card[data-id]');
+  if (first) selectCluster(first.dataset.id);
+  const firstChip = document.querySelector('.chip[id^="chip-P"]');
+  if (firstChip) selectPerson(firstChip.id.replace('chip-', ''));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,4384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>子どもの偏食 ダッシュボード</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+       background: #fff; color: #1e293b; font-size: 14px; line-height: 1.6; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Header ── */
+.page-header { padding: 20px 24px 0; max-width: 1440px; margin: 0 auto; }
+.back-link { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 10px; }
+.back-link:hover { color: #475569; }
+.hdr-row { display: flex; align-items: baseline; gap: 16px; }
+.hdr-row h1 { font-size: 22px; font-weight: 700; }
+.hdr-meta { font-size: 13px; color: #94a3b8; }
+
+/* ── Tab nav ── */
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid #e2e8f0; margin-top: 16px; }
+.tab-btn { font-size: 13px; padding: 10px 20px; cursor: pointer; color: #64748b;
+           border-bottom: 2px solid transparent; margin-bottom: -1px;
+           transition: color .15s, border-color .15s; user-select: none; }
+.tab-btn:hover { color: #1e293b; }
+.tab-btn.active { color: #e53e3e; border-bottom-color: #e53e3e; font-weight: 600; }
+
+/* ── KPI row ── */
+.kpi-row { display: flex; gap: 28px; padding: 14px 24px; max-width: 1440px;
+           margin: 0 auto; flex-wrap: wrap; border-bottom: 1px solid #f1f5f9; }
+.kpi-item { font-size: 13px; color: #64748b; }
+.kpi-item strong { font-size: 22px; font-weight: 800; color: #1e293b; margin-right: 3px; }
+
+/* ── Filter pills ── */
+.filter-row { display: flex; align-items: center; gap: 8px;
+              padding: 10px 24px 8px; max-width: 1440px; margin: 0 auto;
+              font-size: 12px; color: #64748b; }
+.pill { font-size: 12px; padding: 4px 14px; border-radius: 99px;
+        border: 1.5px solid #e2e8f0; background: #fff; color: #475569;
+        cursor: pointer; transition: all .15s; }
+.pill.active { background: #fff5f5; border-color: #e53e3e; color: #e53e3e; font-weight: 600; }
+.pill:hover:not(.active) { background: #f8fafc; }
+
+/* ── Main split ── */
+.main-split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.5fr);
+              max-width: 1440px; margin: 0 auto; min-height: 80vh; }
+
+/* ── Cluster grid (left) ── */
+.cl-grid { padding: 12px; display: grid; grid-template-columns: 1fr 1fr;
+           gap: 8px; border-right: 1px solid #e2e8f0; align-content: start; }
+.cl-card { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px;
+           cursor: pointer; transition: border-color .15s; }
+.cl-card:hover { border-color: #94a3b8; }
+.cl-card.selected { border-color: #e53e3e !important; }
+.cl-card .cid    { font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px; }
+.cl-card .cname  { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.4; margin-bottom: 4px; }
+.cl-card .ccount { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+.cl-card .cpills { display: flex; gap: 4px; flex-wrap: wrap; }
+.icl-pill { font-size: 11px; padding: 2px 8px; border-radius: 99px;
+            background: #dbeafe; color: #1e40af; font-weight: 600; }
+.followup-pill { font-size: 11px; padding: 2px 8px; border-radius: 99px;
+                 background: #fff7ed; color: #c2410c; font-weight: 600; }
+
+/* ── Detail panel (right) ── */
+.detail-panel { padding: 20px 24px; position: sticky; top: 0;
+                max-height: 100vh; overflow-y: auto; }
+.empty-state { display: flex; flex-direction: column; align-items: center;
+               justify-content: center; height: 320px; color: #94a3b8; font-size: 13px; gap: 8px; }
+
+/* ── Detail content ── */
+.det-id    { font-size: 12px; color: #94a3b8; margin-bottom: 2px; }
+.det-name  { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.det-count { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+.score-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.sb { font-size: 11px; padding: 3px 10px; border-radius: 6px; }
+.sb-freq        { background: #dbeafe; color: #1e40af; }
+.sb-depth-高    { background: #dcfce7; color: #166534; }
+.sb-depth-中    { background: #fef3c7; color: #92400e; }
+.sb-depth-低    { background: #f1f5f9; color: #475569; }
+.sb-unmet-高    { background: #fee2e2; color: #991b1b; }
+.sb-unmet-中    { background: #fff7ed; color: #c2410c; }
+.sb-unmet-低    { background: #f1f5f9; color: #475569; }
+
+/* ── Core insight highlight ── */
+.core-insight { border-left: 3px solid #e53e3e; background: #fff5f5;
+                border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: 16px;
+                font-size: 13px; color: #1e293b; line-height: 1.6; }
+
+/* ── Section title ── */
+.sec-title { font-size: 11px; font-weight: 700; color: #94a3b8;
+             text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 8px; }
+
+/* ── Quotes ── */
+.quote-wrap { display: flex; flex-direction: column; gap: 8px; }
+.quote-card { border-left: 3px solid #3b82f6; padding: 10px 14px; background: #f8fafc;
+              border-radius: 0 6px 6px 0; }
+.quote-card .qt { font-size: 13px; color: #334155; }
+.quote-card .qs { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+/* ── ICL cards ── */
+.icl-card { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+.icl-hdr  { display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+            background: #f8fafc; cursor: pointer; }
+.icl-hdr:hover { background: #f1f5f9; }
+.icl-hdr .iid    { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+                   background: #dbeafe; color: #1e40af; white-space: nowrap; }
+.icl-hdr .ilabel { font-size: 13px; font-weight: 600; flex: 1; }
+.icl-hdr .imeta  { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+.icl-body { padding: 12px 14px; border-top: 1px solid #f1f5f9; display: none; }
+.icl-body.open { display: block; }
+.icl-desc   { font-size: 12px; color: #475569; margin-bottom: 10px; line-height: 1.6; }
+.icl-struct { font-size: 11px; color: #475569; white-space: pre-wrap; font-family: monospace;
+              background: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+.root-cards-link { font-size: 12px; color: #3b82f6; display: flex; align-items: center; gap: 4px; }
+
+/* ── Resolution grid ── */
+.res-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+.res-cell { text-align: center; background: #f1f5f9; border-radius: 6px; padding: 6px 4px; }
+.res-axis { font-size: 10px; color: #64748b; }
+.res-val  { font-size: 16px; }
+
+/* ── Depth score ── */
+.depth-section { margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+.depth-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+                background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
+.depth-header > span:first-child { font-size: 11px; font-weight: 700; color: #475569; }
+.depth-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: auto; }
+.depth-metrics { display: grid; grid-template-columns: repeat(4, 1fr); }
+.depth-metric { padding: 8px 10px; border-right: 1px solid #f1f5f9; position: relative; }
+.depth-metric:last-child { border-right: none; }
+.dm-val   { font-size: 15px; font-weight: 800; }
+.dm-label { font-size: 10px; color: #64748b; margin-top: 1px; }
+.dm-sub   { font-size: 9px; color: #94a3b8; }
+.tip { position: relative; display: inline-block; cursor: help; }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b; color: #f8fafc; font-size: 11px;
+  line-height: 1.5; padding: 6px 10px; border-radius: 6px;
+  white-space: pre-wrap; width: 220px; z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+}
+.tip:hover::after { opacity: 1; }
+
+/* ── BP card ── */
+.bp-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+.bp-hdr  { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bp-id   { font-size: 11px; font-weight: 700; color: #94a3b8; }
+.bp-name { font-size: 13px; font-weight: 600; flex: 1; }
+.bp-n    { font-size: 12px; color: #64748b; }
+.bp-jtbd { font-size: 12px; font-style: italic; color: #475569;
+           background: #fffbeb; border-left: 3px solid #f59e0b;
+           padding: 8px 12px; border-radius: 0 6px 6px 0; }
+
+/* ── HMW card ── */
+.hmw-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+.hmw-id  { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+.hmw-q   { font-size: 13px; font-weight: 600; color: #1e293b; }
+.hmw-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; display: inline-block; }
+.badge-blue   { background: #dbeafe; color: #1e40af; }
+.badge-amber  { background: #fef3c7; color: #92400e; }
+.badge-gray   { background: #f1f5f9; color: #475569; }
+
+/* ── Tab content ── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── 発話タブ ── */
+.utt-split { display: grid; grid-template-columns: 200px 1fr;
+             max-width: 1440px; margin: 0 auto; min-height: 80vh; }
+.chip-list { padding: 10px 8px; border-right: 1px solid #e2e8f0;
+             display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 85vh; }
+.chip { display: flex; flex-direction: column; align-items: flex-start;
+        padding: 8px 12px; border-radius: 8px; border: none; background: transparent;
+        text-align: left; cursor: pointer; font-size: 13px; color: #475569;
+        transition: background .15s; width: 100%; }
+.chip:hover { background: #f1f5f9; }
+.chip.active { background: #fff5f5; color: #e53e3e; }
+.chip-sub { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+.chip.active .chip-sub { color: #e53e3e; opacity: .7; }
+.utt-panels { overflow-y: auto; max-height: 85vh; }
+.utt-panel { padding: 20px 24px; display: none; }
+.utt-panel.active { display: block; }
+.utt-phead { margin-bottom: 14px; }
+.utt-pname { font-size: 16px; font-weight: 700; }
+.utt-seg   { font-size: 12px; color: #64748b; margin-top: 2px; }
+.utt-cnt   { font-size: 11px; color: #94a3b8; }
+.ucards-wrap { display: flex; flex-direction: column; gap: 8px; }
+.ucard { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; }
+.ucard-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.cred-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;
+              white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.cA { background: #dcfce7; color: #166534; }
+.cB { background: #dbeafe; color: #1e40af; }
+.cC { background: #fef3c7; color: #92400e; }
+.cD { background: #f1f5f9; color: #64748b; }
+.ucard-main { flex: 1; }
+.ucard-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.ucard-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.utag { font-size: 10px; padding: 1px 6px; border-radius: 99px;
+        background: #f1f5f9; color: #64748b; }
+.ucard-quote { font-size: 13px; color: #334155; margin: 8px 0 6px; line-height: 1.55; }
+.ucard-foot { display: flex; gap: 10px; font-size: 11px; color: #94a3b8; }
+
+/* ── Participants page ── */
+.p-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 12px; padding: 20px 24px; max-width: 1440px; margin: 0 auto; }
+.p-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; }
+.p-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.p-meta { font-size: 11px; color: #64748b; margin-bottom: 6px; }
+.p-sit  { font-size: 12px; color: #475569; border-top: 1px solid #f1f5f9; padding-top: 6px; }
+.p-clusters { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="participants.html" class="back-link">← 参加者一覧</a>
+  <div class="hdr-row">
+    <h1>子どもの偏食</h1>
+    <span class="hdr-meta">N=15名 | Phase 5 完了</span>
+  </div>
+  <div class="tab-nav">
+    <span class="tab-btn active" data-tab="clusters" onclick="switchTab('clusters')">クラスタ・インサイト</span>
+    <span class="tab-btn" data-tab="utterances" onclick="switchTab('utterances')">発話</span>
+  </div>
+</div>
+<div class="kpi-row">
+  <span class="kpi-item"><strong>15</strong>名</span>
+  <span class="kpi-item"><strong>10</strong>クラスタ</span>
+  <span class="kpi-item"><strong>10</strong>インサイトクラスタ</span>
+  <span class="kpi-item"><strong>10</strong>HMW候補</span>
+  <span class="kpi-item"><strong>5</strong>行動パターン</span>
+</div>
+<div class="tab-content active" id="tab-clusters">
+  <div class="filter-row">
+    <span>表示：</span>
+    <button class="pill active" onclick="filterClusters('all', this)">全て</button>
+    <button class="pill" onclick="filterClusters('followup', this)">追加ヒアリング推奨</button>
+  </div>
+  <div class="main-split">
+    <div class="cl-grid">
+<div class="cl-card" data-id="CL-A"  onclick="selectCluster('CL-A')">
+  <div class="cid">CL-A</div>
+  <div class="cname">家外乖離型偏食（給食・保育園では食べる、家では食べない）</div>
+  <div class="ccount">6名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-6</span></div>
+</div>
+<div class="cl-card" data-id="CL-B"  onclick="selectCluster('CL-B')">
+  <div class="cid">CL-B</div>
+  <div class="cname">偏食起因の栄養不安と健康リスク懸念</div>
+  <div class="ccount">5名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-1</span><span class="icl-pill">ICL-10</span></div>
+</div>
+<div class="cl-card" data-id="CL-C"  onclick="selectCluster('CL-C')">
+  <div class="cid">CL-C</div>
+  <div class="cname">共働き家庭における食事準備の時間的・精神的過負荷</div>
+  <div class="ccount">6名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-3</span></div>
+</div>
+<div class="cl-card" data-id="CL-D"  onclick="selectCluster('CL-D')">
+  <div class="cid">CL-D</div>
+  <div class="cname">調理工夫（隠す・刻む・混ぜる）とその根本解決限界</div>
+  <div class="ccount">4名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-5</span></div>
+</div>
+<div class="cl-card" data-id="CL-E" data-followup='1' onclick="selectCluster('CL-E')">
+  <div class="cid">CL-E</div>
+  <div class="cname">参加体験型食育の有効性（料理参加・農業体験）</div>
+  <div class="ccount">6名 / 15名</div>
+  <div class="cpills"><span class="followup-pill">追加ヒアリング推奨</span><span class="icl-pill">ICL-4</span></div>
+</div>
+<div class="cl-card" data-id="CL-F"  onclick="selectCluster('CL-F')">
+  <div class="cid">CL-F</div>
+  <div class="cname">親の心理的疲弊・試行錯誤消耗と受容戦略</div>
+  <div class="ccount">6名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-2</span><span class="icl-pill">ICL-9</span></div>
+</div>
+<div class="cl-card" data-id="CL-G"  onclick="selectCluster('CL-G')">
+  <div class="cid">CL-G</div>
+  <div class="cname">既存サービス・専門家の個別対応力不足</div>
+  <div class="ccount">5名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-5</span></div>
+</div>
+<div class="cl-card" data-id="CL-H"  onclick="selectCluster('CL-H')">
+  <div class="cid">CL-H</div>
+  <div class="cname">栄養補助食品による対処と心理的安心感</div>
+  <div class="ccount">5名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-1</span></div>
+</div>
+<div class="cl-card" data-id="CL-I"  onclick="selectCluster('CL-I')">
+  <div class="cid">CL-I</div>
+  <div class="cname">複数児個別対応の複雑化と献立設計困難</div>
+  <div class="ccount">3名 / 15名</div>
+  <div class="cpills"><span class="icl-pill">ICL-8</span></div>
+</div>
+<div class="cl-card" data-id="CL-J" data-followup='1' onclick="selectCluster('CL-J')">
+  <div class="cid">CL-J</div>
+  <div class="cname">ピア情報不足と偏食専用コミュニティ不在</div>
+  <div class="ccount">4名 / 15名</div>
+  <div class="cpills"><span class="followup-pill">追加ヒアリング推奨</span><span class="icl-pill">ICL-7</span></div>
+</div></div>
+    <div class="detail-panel">
+      <div id="det-empty" class="empty-state">
+        <span style="font-size:20px">←</span>
+        <span>クラスタを選択してください</span>
+      </div>
+      
+<div class="cluster-det" id="det-CL-A" style="display:none">
+  <div class="det-id">CL-A</div>
+  <div class="det-name">家外乖離型偏食（給食・保育園では食べる、家では食べない）</div>
+  <div class="det-count">6名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 6名 / 40%</span>
+  <span class="sb sb-depth-中">課題の深さ: 中</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">行動の環境依存が明確。家外での食事体験が解決ヒントになりやすい</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。キーマカレー、餃子で細かく刻むと食べている。最近やっとミニトマトが食べられるようになった。小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。平日はママ、週末はパパが料理する。」</div>
+  <div class="qs">P-002</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。キーマカレー、餃子で細かく刻むと食べている。最近やっとミニトマトが食べられるようになった。小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。平日はママ、週末はパパが料理する。」</div>
+  <div class="qs">P-003</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「1人目の中３息子が離乳食の時から偏食ぎみで今も食べるものの方が少ない。魚や葉物野菜は全般だめ。スローペースだが少しずつ食材は増えていて、この1年で納豆が食べられるようになった。給食も主食しか食べない日が多い。初めてのものは基本的に食べず、パパママが出したものだけ食べる。2人目3人目の娘はなんでも欲しがって食べる。料理はパパママ半々でパパの方が栄養は気にしているかも。」</div>
+  <div class="qs">P-005</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「3人目が2歳で食べない。食べムラ、好きなものだけ食べる、全然手を付けないことがあり、毎日攻防戦をしている。ある程度進めて食べなければ諦めて、泣く泣く捨てる。保育園の給食は何でも食べているようなので、そこで栄養摂っていると信じて神経質にならないようにしている。周りが食べていると食べるのかも。3人とも好き嫌いはあって年中、年長で食べるようになってきたので、今は食べない時期と思っている。1人目の時は特にこんなんでいいのかという不安が強かった。子供用に食事を作ることはなく、家族分を取り分けて刻むくらい。」</div>
+  <div class="qs">P-010</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-6-CL-A')">
+    <span class="iid">ICL-6</span>
+    <span class="ilabel">家外乖離型偏食と親のコントロール外在化</span>
+    <span class="imeta">T2 | 厚い | 7枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-6-CL-A">
+    <p class="icl-desc">「給食では食べるが家では食べない」という家外乖離型偏食（CL-A）は、5名以上の対象者が 独立に言及した主要パターンである。親はこの事実を「外部での栄養補完」と解釈し、 家庭での対処義務を部分的に軽減する自己正当化に活用する（INS-121）。
+同時に一部の親は保育園での食育アプローチ（色分けレンジャー・特定食材の成功）を 意識的に家庭に転用する戦略的学習を行う（INS-122）。外部環境を単なる 「栄養補完の場」ではなく「食育メソッドの発見源」として活用するより能動的な姿勢である。
+親が「自分では食べさせられない」という限界を認識したとき、解決責任を社会環境 （保育園・親子レストラン・外部施</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">△</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">○</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#fef3c7;color:#92400e">中</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#92400e">7<span style="font-size:10px;font-weight:400;color:#94a3b8">/7</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#92400e">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: A+R">
+      <div class="dm-val" style="color:#92400e">2<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#92400e">1<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-6: 家外乖離型偏食と親のコントロール外在化
+├── INS-121: (パターン) 給食=外部栄養補完として親が自己正当化
+├── INS-122: (パターン) 保育園成功体験を家庭に戦略的転用
+├── INS-076: (パターン亜型) 環境効果の段階的認識と活用
+├── INS-074: (二層構造) 保育園信頼（理性）とサプリ（感情）の並行
+├── INS-079: (非矛盾) 複数対処が実は異なるニーズへの対応
+├── INS-114: (矛盾) 環境依存の受動的解決期待と親の働きかけ限界
+└── INS-205: (動機推論) 親主導限界→社会環境へのコントロール外在化
+</div>
+    <span class="root-cards-link">▶ 根拠カード 7件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-03</span>
+    <span class="bp-name">家外依存・外部コントロール委譲型</span>
+    <span class="bp-n">5名</span>
+  </div>
+  <div class="bp-jtbd">「毎日自分が頑張り続けなくても、子どもが食べる環境が自然に整っていてほしい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-003 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば保育園・給食での食体験が、家庭での偏食改善に自然に繋がる仕組みを作れるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-B" style="display:none">
+  <div class="det-id">CL-B</div>
+  <div class="det-name">偏食起因の栄養不安と健康リスク懸念</div>
+  <div class="det-count">5名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 5名 / 33%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">栄養不安は具体的指標（成長曲線・体格差）と結びつき深刻度が高い</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「子どもが2歳ごろから白米以外食べなくなった。スナック系のおやつは食べられる。家でも保育園でも同じ傾向。保育園からは「食事に興味がない」と言われる。3歳半ごろから少しずつ食べられる食材が増えていき、4歳ごろでは自分から食べることも増えてきた。」</div>
+  <div class="qs">P-001</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「離乳食は何でも食べたが、2歳過ぎから好き嫌いがはっきりしてきた。たぶん食感に敏感で、ナス、キノコ、繊維質の肉は食べない。丸のみする傾向があるから。4歳から「ぐにゅっとした食感が嫌いなの？」「うん」と言葉で確認できるようになった。最近は一口だけでも食べてくれたりする。Oisixを使っていて、子供が好きな味や食材ではないので食べなかった。育休中にやめて、自分で献立考えると食べるようになってきた。今は子供が食べるメニューで1週間分の献立を7種類持っている。それを回しているので復職しても何とかなりそう。」</div>
+  <div class="qs">P-007</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「栄養が不安。好き嫌いあるが、野菜も声掛けすれば食べるのでそこまで困らない。本当は良くないと思うが、「お姫様になれないよ」と声掛けする。ただ、食べる量にムラがあるので栄養が不安。ピーマンは欠片しか食べない。食べる野菜は決まっていて、キャベツ、人参、ブロッコリー、玉ねぎ。苦いから嫌、変な味がする、程度の会話はできる。流暢な会話はまだできない。」</div>
+  <div class="qs">P-008</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「料理は奥さんがする」</div>
+  <div class="qs">P-009</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-1-CL-B')">
+    <span class="iid">ICL-1</span>
+    <span class="ilabel">栄養不安→試行錯誤消耗→受容転換の共通回路</span>
+    <span class="imeta">T2 | 厚い | 10枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-1-CL-B">
+    <p class="icl-desc">親は子どもの偏食による栄養不足懸念（CL-B）から出発し、多様な対処を試みるが、 専門家相談や市販サービスでは個別対応が得られず（CL-G）、試行錯誤を繰り返す中で 疲弊を蓄積する（CL-F）。その結果、親は「完璧な栄養バランス」の追求を諦め、 「食べているだけでいい」という最低限基準へと価値観を自発的に引き下げる。
+この転換には必ず「外部承認」が必要であり、医学的診断・ピア比較・義母の言葉・ 補助食品の存在が「これでいい」という正当化根拠として機能する（INS-203と連結）。 補助食品（サプリ米・プロテイン・野菜ジュース）は栄養補給よりも「何かしている証拠」 として機能し、受容戦略への心理</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">○</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#fef3c7;color:#92400e">中</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#92400e">10<span style="font-size:10px;font-weight:400;color:#94a3b8">/10</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#92400e">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: なし">
+      <div class="dm-val" style="color:#92400e">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#92400e">5<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-1: 栄養不安→試行錯誤消耗→受容転換の共通回路
+├── INS-123: (パターン) 客観的指標が栄養不安を急速深刻化させる
+├── INS-001: (矛盾) 食材からの栄養理想 vs サプリ依存の共存
+├── INS-009: (矛盾) 給食で安心 vs 野菜不足が健康リスクという分裂評価
+├── INS-026: (矛盾) 栄養懸念あるのに幼児期は補助食品を避けていた
+├── INS-052: (矛盾) 栄養完璧追求→「バナナでいいや」への転換
+├── INS-124: (パターン) 疲弊蓄積による期待値引き下げ
+├── INS-134: (パターン) 補助食品が心理的安心機能として作動
+├── INS-139: (パターン) 補助食品×受容の組み合わせ
+├── INS-207: (動機推論) 補助食品が対処義務からの解放として機能
+└── INS-211: (動機推論) 段階的転換（不安→試行→受容）の共通構造
+</div>
+    <span class="root-cards-link">▶ 根拠カード 10件を見る</span>
+  </div>
+</div>
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-10-CL-B')">
+    <span class="iid">ICL-10</span>
+    <span class="ilabel">偏食の発達特性・感覚過敏の見過ごし</span>
+    <span class="imeta">T3 | 薄い | 13枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-10-CL-B">
+    <p class="icl-desc">全15対象者のうち13名以上で、子どもの偏食の背景に発達特性・感覚過敏 （ASD・感覚処理障害・ARFID等）の可能性が全く検討されていないことが 不在検出（T3）として繰り返し指摘されている。
+これはT3（二次推論）であるため証拠強度は低く、実際に発達特性がある比率は不明だが、 「食感の拒否」「特定食材への一貫した回避」「家外では食べられる」という複数の行動パターンは 感覚処理特性と重なる部分がある。14年間改善しない偏食（P-013）、 離乳食期からの一貫した拒否パターン（P-004）等は特に検討の必要性が高い。
+親が偏食を「しつけ・好き嫌い・意志の問題」として捉え、発達特性として理解して</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">△</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">×</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">×</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#f1f5f9;color:#64748b">低</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#64748b">0<span style="font-size:10px;font-weight:400;color:#94a3b8">/13</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#64748b">0.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: なし">
+      <div class="dm-val" style="color:#64748b">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#64748b">4<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-10: 偏食の発達特性・感覚過敏の見過ごし（全件T3）
+├── INS-305: (不在/T3) P-001: 発達特性可能性への言及なし
+├── INS-312: (不在/T3) P-002: 感覚過敏・ASD可能性の未検証
+├── INS-320: (不在/T3) P-003: 牛乳メーカーこだわりと感覚処理特性
+├── INS-329: (不在/T3) P-004: 離乳食からの偏食と発達特性
+├── INS-336: (不在/T3) P-005: 感覚統合困難可能性への検討なし
+├── INS-345: (不在/T3) P-006: 兄弟食好み差が発達特性由来か
+├── INS-353: (不在/T3) P-007: 食感敏感性と発達特性の医学的検討なし
+├── INS-362: (不在/T3) P-008: 食材選別の背景に感覚過敏の可能性
+├── INS-368: (不在/T3) P-009: 偏食と発達特性の医学的鑑別不在
+├── INS-386: (不在/T3) P-011: 食感への反応が発達特性範囲か不明
+├── INS-390: (不在/T3) P-012: 長男の「拘り」と発達特性の可能性
+├── INS-401: (不在/T3) P-013: 14年継続偏食とARFID等の可能性
+└── INS-412: (不在/T3) P-014: 3歳娘の偏食と発達特性の未検討
+</div>
+    <span class="root-cards-link">▶ 根拠カード 13件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-05</span>
+    <span class="bp-name">客観的指標ショック→専門家失敗→自己学習転換型</span>
+    <span class="bp-n">4名</span>
+  </div>
+  <div class="bp-jtbd">「「この子は大丈夫」という確信を、信頼できる根拠とともに誰かに言ってほしい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-007 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=5</span></div>
+  <div class="hmw-q">どうすれば偏食の子どもの親が、成長曲線・体格差などの客観的指標に気づいたとき、不安が増幅される前に「これで大丈夫」という根拠を得られるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-009 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=5</span></div>
+  <div class="hmw-q">どうすれば偏食に悩む親が、補助食品に頼ることへの罪悪感なく「今はこれでいい」という受容に至れるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-C" style="display:none">
+  <div class="det-id">CL-C</div>
+  <div class="det-name">共働き家庭における食事準備の時間的・精神的過負荷</div>
+  <div class="det-count">6名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 6名 / 40%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">毎日の継続課題。フルタイム・時短勤務家庭で特に深刻</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「子どもが2歳ごろから白米以外食べなくなった。スナック系のおやつは食べられる。家でも保育園でも同じ傾向。保育園からは「食事に興味がない」と言われる。3歳半ごろから少しずつ食べられる食材が増えていき、4歳ごろでは自分から食べることも増えてきた。」</div>
+  <div class="qs">P-001</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「2人目の小３息子（9歳）が離乳食の時から偏食だった。お粥や白ご飯は食べるが、野菜やお肉に手を出さない。マヨネーズやドレッシングも嫌い。少しずつ食べるものが増えてきてはいるが、イヤイヤ食べている。食事に1時間以上かかる。」</div>
+  <div class="qs">P-004</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「離乳食は何でも食べたが、2歳過ぎから好き嫌いがはっきりしてきた。たぶん食感に敏感で、ナス、キノコ、繊維質の肉は食べない。丸のみする傾向があるから。4歳から「ぐにゅっとした食感が嫌いなの？」「うん」と言葉で確認できるようになった。最近は一口だけでも食べてくれたりする。Oisixを使っていて、子供が好きな味や食材ではないので食べなかった。育休中にやめて、自分で献立考えると食べるようになってきた。今は子供が食べるメニューで1週間分の献立を7種類持っている。それを回しているので復職しても何とかなりそう。」</div>
+  <div class="qs">P-007</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「栄養が不安。好き嫌いあるが、野菜も声掛けすれば食べるのでそこまで困らない。本当は良くないと思うが、「お姫様になれないよ」と声掛けする。ただ、食べる量にムラがあるので栄養が不安。ピーマンは欠片しか食べない。食べる野菜は決まっていて、キャベツ、人参、ブロッコリー、玉ねぎ。苦いから嫌、変な味がする、程度の会話はできる。流暢な会話はまだできない。」</div>
+  <div class="qs">P-008</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-3-CL-C')">
+    <span class="iid">ICL-3</span>
+    <span class="ilabel">共働き家庭の時間的・認知的過負荷構造</span>
+    <span class="imeta">T2 | 厚い | 12枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-3-CL-C">
+    <p class="icl-desc">共働き家庭の偏食対処困難の根本は「時間がない」という単純な制約ではなく、 「実行手間（調理・作り置き）」と「管理手間（判断継続・情報入力）」という 二種類の負荷が別々の閾値で評価されている構造にある（INS-127, INS-201）。 調理という実行タスクは疲れながらも継続できるが、継続的な判断・記録という 認知タスクには強い抵抗が生じる。これはDecision Fatigueの恒常化状態を示す。
+複数の子どもを持つ家庭では、子どもごとに異なる偏食パターンへの個別対応が 追加的な認知負荷を生む（CL-I, INS-209）。「全員に最適な単一解」が原理的に 存在しないという認識が親の疲弊を加</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">◎</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#f1f5f9;color:#64748b">低</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#64748b">12<span style="font-size:10px;font-weight:400;color:#94a3b8">/12</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#64748b">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: なし">
+      <div class="dm-val" style="color:#64748b">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#64748b">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-3: 共働き家庭の時間的・認知的過負荷構造
+├── INS-201: (動機推論) 認知負荷最小化が時間短縮より優先される選好
+├── INS-127: (パターン) 実行手間と管理手間で異なる閾値
+├── INS-113: (矛盾) 調理手間は許容するが管理手間は強く拒否
+├── INS-126: (パターン) 時間がソリューション除外の最優先フィルター
+├── INS-058: (矛盾) 責任感はあるが平日は実行ほぼ不可能
+├── INS-059: (矛盾) 効果ある手法を時間理由で諦める
+├── INS-042: (矛盾) 計画的だが新規記録タスクへの耐性はない
+├── INS-125: (パターン) 特別食廃止・取り分け方式への転換
+├── INS-075: (制約下判断) 安全管理優先の現実的な価値順位付け
+├── INS-209: (動機推論) 複数児の全員最適解不在が疲弊を加速
+├── INS-106: (矛盾) 自己の負担軽減優先、全体負担への厳しい評価
+└── INS-107: (矛盾) 親子レストランへの強いニーズと実装複雑さの分断
+</div>
+    <span class="root-cards-link">▶ 根拠カード 12件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-04</span>
+    <span class="bp-name">複数児対応特別食廃止・取り分け定着型</span>
+    <span class="bp-n">3名</span>
+  </div>
+  <div class="bp-jtbd">「子どもが食べるかどうかを毎食考える頭のリソースを、もっと別のことに使いたい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-001 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=5</span></div>
+  <div class="hmw-q">どうすれば共働き家庭の親が、偏食の子どもへの毎日の食事対応で「何かしている」という実感を、調理の手間を増やさずに持てるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-005 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば共働き親が、子どもが「食べなかった日」に自分の努力が否定されたと感じずに、次の食事の準備を続けられるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-006 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=3</span></div>
+  <div class="hmw-q">どうすれば子どもに偏食がある複数児家庭の親が、毎食の献立決定で生じる認知負荷を、料理の質を落とさずに削減できるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-008 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば共働き親が、体験型食育（料理参加・農業体験）が有効だとわかっていても継続できない状況で、子どもの食への意欲を外部の力に頼って育てられるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-D" style="display:none">
+  <div class="det-id">CL-D</div>
+  <div class="det-name">調理工夫（隠す・刻む・混ぜる）とその根本解決限界</div>
+  <div class="det-count">4名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 4名 / 27%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">親が自ら工夫の限界を認識して行動転換している点が特徴的</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「子どもが2歳ごろから白米以外食べなくなった。スナック系のおやつは食べられる。家でも保育園でも同じ傾向。保育園からは「食事に興味がない」と言われる。3歳半ごろから少しずつ食べられる食材が増えていき、4歳ごろでは自分から食べることも増えてきた。」</div>
+  <div class="qs">P-001</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。キーマカレー、餃子で細かく刻むと食べている。最近やっとミニトマトが食べられるようになった。小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。平日はママ、週末はパパが料理する。」</div>
+  <div class="qs">P-002</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「2人目の小３息子（9歳）が離乳食の時から偏食だった。お粥や白ご飯は食べるが、野菜やお肉に手を出さない。マヨネーズやドレッシングも嫌い。少しずつ食べるものが増えてきてはいるが、イヤイヤ食べている。食事に1時間以上かかる。」</div>
+  <div class="qs">P-004</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「子供の要望、栄養バランス、値段、親の満足を両立できる献立を考えること。短時間である程度手の込んだ子供でも食べれるもの。」</div>
+  <div class="qs">P-006</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-5-CL-D')">
+    <span class="iid">ICL-5</span>
+    <span class="ilabel">既存サービス不信と自力解決転換の自律学習回路</span>
+    <span class="imeta">T2 | 厚い | 8枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-5-CL-D">
+    <p class="icl-desc">栄養士・保育園相談・市販ミールキット・外部サービスが「当たり障りのない一般的な アドバイス」「自分の子に合わない食材提案」「個別対応力の欠如」を理由に次々と 失敗体験を積み重ねる（INS-133）。この「試行→失敗→自力解決転換」サイクルが 複数の親に共通するパターンとなっており、新規サービスへの初期懐疑度が高い 構造的背景となっている（INS-204）。
+親は試行錯誤を通じて「外部に答えはない、自分で学習するしかない」という認識に至り、 独自のノウハウ（7種ローテーション・ゲーミフィケーション・混ぜる戦略）を構築する。 しかしこれも「隠す・混ぜる」工夫の限界を経験から学習してやめ（INS-1</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">◎</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#dcfce7;color:#166534">高</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#166534">8<span style="font-size:10px;font-weight:400;color:#94a3b8">/8</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#166534">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: C+R">
+      <div class="dm-val" style="color:#166534">2<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#166534">5<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-5: 既存サービス不信と自力解決転換の自律学習回路
+├── INS-133: (パターン) 専門家不信→試行失敗→自力解決転換
+├── INS-204: (動機推論) 既存サービス不信→自力解決が共通スタイル
+├── INS-128: (パターン) 隠す調理工夫を経験から自発的にやめる
+├── INS-050: (矛盾) Oisix失敗→自献立7種システム構築
+├── INS-051: (矛盾) 「特別食廃止」と「事前献立個別化」の二段階戦略
+├── INS-057: (矛盾) 自然志向の実態は透明性志向という認識の再定義
+├── INS-065: (矛盾) 医学的診断で対処信念が全面的かつ急速に転換
+└── INS-098: (矛盾) 食育優先度低いが上質サービスには継続投資という二重基準
+</div>
+    <span class="root-cards-link">▶ 根拠カード 8件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-02</span>
+    <span class="bp-name">サービス失敗→自力システム構築型</span>
+    <span class="bp-n">4名</span>
+  </div>
+  <div class="bp-jtbd">「自分の子の偏食パターンに合った方法を、他人に委ねず自分でコントロールしたい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-010 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=4</span></div>
+  <div class="hmw-q">どうすれば調理工夫（隠す・混ぜる）が根本解決でないと気づいた親が、次に何をすべきか迷わずに行動できるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-E" style="display:none">
+  <div class="det-id">CL-E</div>
+  <div class="det-name">参加体験型食育の有効性（料理参加・農業体験）</div>
+  <div class="det-count">6名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 6名 / 40%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-低">未充足度: 低</span>
+</div>
+  <div class="core-insight">有効性は示されているが課題は「継続できないこと」「食行動変容に繋がらないこと」</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「子どもが2歳ごろから白米以外食べなくなった。スナック系のおやつは食べられる。家でも保育園でも同じ傾向。保育園からは「食事に興味がない」と言われる。3歳半ごろから少しずつ食べられる食材が増えていき、4歳ごろでは自分から食べることも増えてきた。」</div>
+  <div class="qs">P-001</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「2人目の小３息子（9歳）が離乳食の時から偏食だった。お粥や白ご飯は食べるが、野菜やお肉に手を出さない。マヨネーズやドレッシングも嫌い。少しずつ食べるものが増えてきてはいるが、イヤイヤ食べている。食事に1時間以上かかる。」</div>
+  <div class="qs">P-004</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「子供の要望、栄養バランス、値段、親の満足を両立できる献立を考えること。短時間である程度手の込んだ子供でも食べれるもの。」</div>
+  <div class="qs">P-006</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「離乳食は何でも食べたが、2歳過ぎから好き嫌いがはっきりしてきた。たぶん食感に敏感で、ナス、キノコ、繊維質の肉は食べない。丸のみする傾向があるから。4歳から「ぐにゅっとした食感が嫌いなの？」「うん」と言葉で確認できるようになった。最近は一口だけでも食べてくれたりする。Oisixを使っていて、子供が好きな味や食材ではないので食べなかった。育休中にやめて、自分で献立考えると食べるようになってきた。今は子供が食べるメニューで1週間分の献立を7種類持っている。それを回しているので復職しても何とかなりそう。」</div>
+  <div class="qs">P-007</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-4-CL-E')">
+    <span class="iid">ICL-4</span>
+    <span class="ilabel">参加体験型食育の効果と実行可能性のギャップ</span>
+    <span class="imeta">T2 | 厚い | 11枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-4-CL-E">
+    <p class="icl-desc">参加体験型食育（料理参加・農業体験・家庭菜園）は、親が最も「有効だ」と認識している 対処法だが、その効果には重大な限界と条件がある。農業体験・収穫体験は食材への 「興味」を高めるが、「食べる行動変容」には必ずしも繋がらない（INS-129）。 一方、料理参加・調理手伝いは食べる動機に近いが、共働きによる時間・余力不足で 継続が困難になる（INS-130）。
+「効果は知っているが実行できない」という認知的不協和（INS-210）は、単なる 「できていない」より深刻な罪悪感・自責感を生む。この蓄積が新規体験型サービスへの 「どうせ続けられない」という先行的な諦め（参加障壁上昇）につながる。
+疲弊し</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">○</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#fef3c7;color:#92400e">中</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#92400e">11<span style="font-size:10px;font-weight:400;color:#94a3b8">/11</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#92400e">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: A+C">
+      <div class="dm-val" style="color:#92400e">2<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#92400e">1<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-4: 参加体験型食育の効果と実行可能性のギャップ
+├── INS-129: (パターン) 農業体験は興味を生むが食行動変容に繋がらない
+├── INS-003: (矛盾) 料理参加は成功するが農業体験は限定的
+├── INS-025: (矛盾) 食への興味なさそう認識vs体験で興味喚起の乖離
+├── INS-010: (矛盾) 体験型食育を理想視するが実績なしサービスは否定
+├── INS-130: (パターン) 有効だとわかっているのにできない構造
+├── INS-066: (矛盾) 調理参加が有効と知りながら継続困難
+├── INS-210: (動機推論) 実行できない認知的不協和が罪悪感を生成
+├── INS-076: (パターン亜型) 外部環境成功を家庭に転用する認知
+├── INS-078: (パターン亜型) 体験+心理的解放の両立がソリューション受容条件
+├── INS-138: (パターン) 外部環境依存型の期待転換
+└── INS-205: (動機推論) 親主導限界認識→社会環境へのコントロール外在化
+</div>
+    <span class="root-cards-link">▶ 根拠カード 11件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  <p style="color:#94a3b8;font-size:12px">なし</p>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-003 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば保育園・給食での食体験が、家庭での偏食改善に自然に繋がる仕組みを作れるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-008 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば共働き親が、体験型食育（料理参加・農業体験）が有効だとわかっていても継続できない状況で、子どもの食への意欲を外部の力に頼って育てられるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-F" style="display:none">
+  <div class="det-id">CL-F</div>
+  <div class="det-name">親の心理的疲弊・試行錯誤消耗と受容戦略</div>
+  <div class="det-count">6名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 6名 / 40%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">疲弊→受容転換は6名で確認。受容後の心理状態は対象者により大きく異なる</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。キーマカレー、餃子で細かく刻むと食べている。最近やっとミニトマトが食べられるようになった。小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。平日はママ、週末はパパが料理する。」</div>
+  <div class="qs">P-002</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。キーマカレー、餃子で細かく刻むと食べている。最近やっとミニトマトが食べられるようになった。小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。平日はママ、週末はパパが料理する。」</div>
+  <div class="qs">P-003</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「離乳食は何でも食べたが、2歳過ぎから好き嫌いがはっきりしてきた。たぶん食感に敏感で、ナス、キノコ、繊維質の肉は食べない。丸のみする傾向があるから。4歳から「ぐにゅっとした食感が嫌いなの？」「うん」と言葉で確認できるようになった。最近は一口だけでも食べてくれたりする。Oisixを使っていて、子供が好きな味や食材ではないので食べなかった。育休中にやめて、自分で献立考えると食べるようになってきた。今は子供が食べるメニューで1週間分の献立を7種類持っている。それを回しているので復職しても何とかなりそう。」</div>
+  <div class="qs">P-007</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「料理は奥さんがする」</div>
+  <div class="qs">P-009</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-2-CL-F')">
+    <span class="iid">ICL-2</span>
+    <span class="ilabel">親の心理的疲弊と戦略的受容のメカニズム</span>
+    <span class="imeta">T2 | 厚い | 13枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-2-CL-F">
+    <p class="icl-desc">親は「子どもに作ったものを食べてくれること」を最大の充足感として位置づけているが （INS-202）、これが達成できないとき（廃棄・拒否発言）は単なる失敗でなく 「自分の努力・愛情の否定」として体験される（INS-206）。この心理的構造が、 努力を重ねるほどにダメージも蓄積するという逆説を生む。
+疲弊が蓄積した親は「完全に諦める」ではなく「希望は持ちながら強制はしない」という 戦略的受容に至る（INS-131）。この転換には義母の言葉・ピア比較・医学的診断など 「外部承認」が必要であり、一人では受容を正当化できない孤立構造がある（INS-203）。
+ただしP-010のように複数児育成経験を経</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">○</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#fef3c7;color:#92400e">中</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#92400e">13<span style="font-size:10px;font-weight:400;color:#94a3b8">/13</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#92400e">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: C+R">
+      <div class="dm-val" style="color:#92400e">2<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#92400e">1<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-2: 親の心理的疲弊と戦略的受容のメカニズム
+├── INS-206: (動機推論) 拒否=努力否定という体験構造（疲弊の根源）
+├── INS-202: (動機推論) 食べてくれる体験が継続動機の核心
+├── INS-049: (矛盾) 希望と毎日ストレスが並存する状態
+├── INS-002: (矛盾) 食事体験への期待vs現実の食べない事実
+├── INS-053: (矛盾) ストレス下でも社会的支持が継続を支える
+├── INS-073: (心理葛藤) 倫理vs実利の葛藤を抱えながら実利優先
+├── INS-131: (パターン) 疲弊後の戦略的受容への転換
+├── INS-132: (パターン) 外部トリガーによる受容転換の正当化
+├── INS-203: (動機推論) 外部承認なしに受容できない孤立構造
+├── INS-097: (矛盾) 親主導負担は拒否するが本格体験投資は継続
+├── INS-105: (矛盾) 表面的受容の裏に潜む隠れたニーズ
+├── INS-077: (パターン亜型) 経験学習による心理的解放（疲弊回避成功例）
+└── INS-080: (パターン亜型) 複数児育成でレジリエンスが構築される
+</div>
+    <span class="root-cards-link">▶ 根拠カード 13件を見る</span>
+  </div>
+</div>
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-9-CL-F')">
+    <span class="iid">ICL-9</span>
+    <span class="ilabel">親の食事体験への感情的投資と自己効力感</span>
+    <span class="imeta">T2 | 厚い | 5枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-9-CL-F">
+    <p class="icl-desc">親にとって食事は「栄養補給」という機能的行為であると同時に、「子どもに喜んでもらえた」 「作ったものを食べてくれた」という感情的報酬を得る場として機能している（INS-202, INS-137）。 この感情的報酬が毎日の対処継続の一次動機であり、栄養という結果より「食べてくれる体験」 という感情的価値が親を動かしている。
+P-006のゲーミフィケーション事例では、クイズゲームでの成功を親自身が子どもの達成感として 共有し、自己効力感が強化されるポジティブループが形成された（INS-137）。 父親が料理する姿のモデリング効果・家族健康成果が継続動機として機能しており、 食育サービスの価値提案は</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">△</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">○</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#f1f5f9;color:#64748b">低</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#64748b">4<span style="font-size:10px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#64748b">0.80</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: R">
+      <div class="dm-val" style="color:#64748b">1<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#64748b">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-9: 親の食事体験への感情的投資と自己効力感
+├── INS-202: (動機推論) 「食べてくれた」体験が継続動機の核心
+├── INS-137: (パターン) 食事体験共有が親の自己効力感を生む
+├── INS-041: (矛盾) 記録の有用性は認めるが実装場所の選好が異なる
+├── INS-043: (矛盾) 共有しないと表明するがSNSでは自発的に発信
+└── INS-004: (矛盾/T3) 改善要因の因果帰属の確認バイアス
+</div>
+    <span class="root-cards-link">▶ 根拠カード 5件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-01</span>
+    <span class="bp-name">試行錯誤疲弊→補助食品安心型受容</span>
+    <span class="bp-n">5名</span>
+  </div>
+  <div class="bp-jtbd">「私が偏食に対してできることを全部やりつくした感が欲しい。何もしていない罪悪感をなくしたい」</div>
+</div>
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-03</span>
+    <span class="bp-name">家外依存・外部コントロール委譲型</span>
+    <span class="bp-n">5名</span>
+  </div>
+  <div class="bp-jtbd">「毎日自分が頑張り続けなくても、子どもが食べる環境が自然に整っていてほしい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-002 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば偏食の親が、子どもの偏食に「自分一人で戦っている感」を感じずに、日常の小さな前進を確認できるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-005 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば共働き親が、子どもが「食べなかった日」に自分の努力が否定されたと感じずに、次の食事の準備を続けられるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-G" style="display:none">
+  <div class="det-id">CL-G</div>
+  <div class="det-name">既存サービス・専門家の個別対応力不足</div>
+  <div class="det-count">5名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 5名 / 33%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">専門家・サービス失敗後、自力解決転換が共通パターン。市場空白の証拠</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「1人目の中３息子が離乳食の時から偏食ぎみで今も食べるものの方が少ない。魚や葉物野菜は全般だめ。スローペースだが少しずつ食材は増えていて、この1年で納豆が食べられるようになった。給食も主食しか食べない日が多い。初めてのものは基本的に食べず、パパママが出したものだけ食べる。2人目3人目の娘はなんでも欲しがって食べる。料理はパパママ半々でパパの方が栄養は気にしているかも。」</div>
+  <div class="qs">P-005</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「離乳食は何でも食べたが、2歳過ぎから好き嫌いがはっきりしてきた。たぶん食感に敏感で、ナス、キノコ、繊維質の肉は食べない。丸のみする傾向があるから。4歳から「ぐにゅっとした食感が嫌いなの？」「うん」と言葉で確認できるようになった。最近は一口だけでも食べてくれたりする。Oisixを使っていて、子供が好きな味や食材ではないので食べなかった。育休中にやめて、自分で献立考えると食べるようになってきた。今は子供が食べるメニューで1週間分の献立を7種類持っている。それを回しているので復職しても何とかなりそう。」</div>
+  <div class="qs">P-007</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「栄養が不安。好き嫌いあるが、野菜も声掛けすれば食べるのでそこまで困らない。本当は良くないと思うが、「お姫様になれないよ」と声掛けする。ただ、食べる量にムラがあるので栄養が不安。ピーマンは欠片しか食べない。食べる野菜は決まっていて、キャベツ、人参、ブロッコリー、玉ねぎ。苦いから嫌、変な味がする、程度の会話はできる。流暢な会話はまだできない。」</div>
+  <div class="qs">P-008</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「料理は奥さんがする」</div>
+  <div class="qs">P-009</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-5-CL-G')">
+    <span class="iid">ICL-5</span>
+    <span class="ilabel">既存サービス不信と自力解決転換の自律学習回路</span>
+    <span class="imeta">T2 | 厚い | 8枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-5-CL-G">
+    <p class="icl-desc">栄養士・保育園相談・市販ミールキット・外部サービスが「当たり障りのない一般的な アドバイス」「自分の子に合わない食材提案」「個別対応力の欠如」を理由に次々と 失敗体験を積み重ねる（INS-133）。この「試行→失敗→自力解決転換」サイクルが 複数の親に共通するパターンとなっており、新規サービスへの初期懐疑度が高い 構造的背景となっている（INS-204）。
+親は試行錯誤を通じて「外部に答えはない、自分で学習するしかない」という認識に至り、 独自のノウハウ（7種ローテーション・ゲーミフィケーション・混ぜる戦略）を構築する。 しかしこれも「隠す・混ぜる」工夫の限界を経験から学習してやめ（INS-1</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">◎</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#dcfce7;color:#166534">高</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#166534">8<span style="font-size:10px;font-weight:400;color:#94a3b8">/8</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#166534">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: C+R">
+      <div class="dm-val" style="color:#166534">2<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#166534">5<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-5: 既存サービス不信と自力解決転換の自律学習回路
+├── INS-133: (パターン) 専門家不信→試行失敗→自力解決転換
+├── INS-204: (動機推論) 既存サービス不信→自力解決が共通スタイル
+├── INS-128: (パターン) 隠す調理工夫を経験から自発的にやめる
+├── INS-050: (矛盾) Oisix失敗→自献立7種システム構築
+├── INS-051: (矛盾) 「特別食廃止」と「事前献立個別化」の二段階戦略
+├── INS-057: (矛盾) 自然志向の実態は透明性志向という認識の再定義
+├── INS-065: (矛盾) 医学的診断で対処信念が全面的かつ急速に転換
+└── INS-098: (矛盾) 食育優先度低いが上質サービスには継続投資という二重基準
+</div>
+    <span class="root-cards-link">▶ 根拠カード 8件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-02</span>
+    <span class="bp-name">サービス失敗→自力システム構築型</span>
+    <span class="bp-n">4名</span>
+  </div>
+  <div class="bp-jtbd">「自分の子の偏食パターンに合った方法を、他人に委ねず自分でコントロールしたい」</div>
+</div>
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-05</span>
+    <span class="bp-name">客観的指標ショック→専門家失敗→自己学習転換型</span>
+    <span class="bp-n">4名</span>
+  </div>
+  <div class="bp-jtbd">「「この子は大丈夫」という確信を、信頼できる根拠とともに誰かに言ってほしい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-004 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=5</span></div>
+  <div class="hmw-q">どうすれば偏食に悩む親が、試行錯誤の失敗体験をしてきても「このサービスは自分に合う」と初回で感じられるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-010 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=4</span></div>
+  <div class="hmw-q">どうすれば調理工夫（隠す・混ぜる）が根本解決でないと気づいた親が、次に何をすべきか迷わずに行動できるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-H" style="display:none">
+  <div class="det-id">CL-H</div>
+  <div class="det-name">栄養補助食品による対処と心理的安心感</div>
+  <div class="det-count">5名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 5名 / 33%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">補助食品は「精神安定剤」機能。栄養解決より不安軽減として機能している</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「子どもが2歳ごろから白米以外食べなくなった。スナック系のおやつは食べられる。家でも保育園でも同じ傾向。保育園からは「食事に興味がない」と言われる。3歳半ごろから少しずつ食べられる食材が増えていき、4歳ごろでは自分から食べることも増えてきた。」</div>
+  <div class="qs">P-001</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「2人目の小３息子（9歳）が離乳食の時から偏食だった。お粥や白ご飯は食べるが、野菜やお肉に手を出さない。マヨネーズやドレッシングも嫌い。少しずつ食べるものが増えてきてはいるが、イヤイヤ食べている。食事に1時間以上かかる。」</div>
+  <div class="qs">P-004</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「1人目の中３息子が離乳食の時から偏食ぎみで今も食べるものの方が少ない。魚や葉物野菜は全般だめ。スローペースだが少しずつ食材は増えていて、この1年で納豆が食べられるようになった。給食も主食しか食べない日が多い。初めてのものは基本的に食べず、パパママが出したものだけ食べる。2人目3人目の娘はなんでも欲しがって食べる。料理はパパママ半々でパパの方が栄養は気にしているかも。」</div>
+  <div class="qs">P-005</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「3人目が2歳で食べない。食べムラ、好きなものだけ食べる、全然手を付けないことがあり、毎日攻防戦をしている。ある程度進めて食べなければ諦めて、泣く泣く捨てる。保育園の給食は何でも食べているようなので、そこで栄養摂っていると信じて神経質にならないようにしている。周りが食べていると食べるのかも。3人とも好き嫌いはあって年中、年長で食べるようになってきたので、今は食べない時期と思っている。1人目の時は特にこんなんでいいのかという不安が強かった。子供用に食事を作ることはなく、家族分を取り分けて刻むくらい。」</div>
+  <div class="qs">P-010</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-1-CL-H')">
+    <span class="iid">ICL-1</span>
+    <span class="ilabel">栄養不安→試行錯誤消耗→受容転換の共通回路</span>
+    <span class="imeta">T2 | 厚い | 10枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-1-CL-H">
+    <p class="icl-desc">親は子どもの偏食による栄養不足懸念（CL-B）から出発し、多様な対処を試みるが、 専門家相談や市販サービスでは個別対応が得られず（CL-G）、試行錯誤を繰り返す中で 疲弊を蓄積する（CL-F）。その結果、親は「完璧な栄養バランス」の追求を諦め、 「食べているだけでいい」という最低限基準へと価値観を自発的に引き下げる。
+この転換には必ず「外部承認」が必要であり、医学的診断・ピア比較・義母の言葉・ 補助食品の存在が「これでいい」という正当化根拠として機能する（INS-203と連結）。 補助食品（サプリ米・プロテイン・野菜ジュース）は栄養補給よりも「何かしている証拠」 として機能し、受容戦略への心理</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">◎</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">○</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#fef3c7;color:#92400e">中</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#92400e">10<span style="font-size:10px;font-weight:400;color:#94a3b8">/10</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#92400e">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: なし">
+      <div class="dm-val" style="color:#92400e">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#92400e">5<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-1: 栄養不安→試行錯誤消耗→受容転換の共通回路
+├── INS-123: (パターン) 客観的指標が栄養不安を急速深刻化させる
+├── INS-001: (矛盾) 食材からの栄養理想 vs サプリ依存の共存
+├── INS-009: (矛盾) 給食で安心 vs 野菜不足が健康リスクという分裂評価
+├── INS-026: (矛盾) 栄養懸念あるのに幼児期は補助食品を避けていた
+├── INS-052: (矛盾) 栄養完璧追求→「バナナでいいや」への転換
+├── INS-124: (パターン) 疲弊蓄積による期待値引き下げ
+├── INS-134: (パターン) 補助食品が心理的安心機能として作動
+├── INS-139: (パターン) 補助食品×受容の組み合わせ
+├── INS-207: (動機推論) 補助食品が対処義務からの解放として機能
+└── INS-211: (動機推論) 段階的転換（不安→試行→受容）の共通構造
+</div>
+    <span class="root-cards-link">▶ 根拠カード 10件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-01</span>
+    <span class="bp-name">試行錯誤疲弊→補助食品安心型受容</span>
+    <span class="bp-n">5名</span>
+  </div>
+  <div class="bp-jtbd">「私が偏食に対してできることを全部やりつくした感が欲しい。何もしていない罪悪感をなくしたい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-001 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=5</span></div>
+  <div class="hmw-q">どうすれば共働き家庭の親が、偏食の子どもへの毎日の食事対応で「何かしている」という実感を、調理の手間を増やさずに持てるか？</div>
+</div>
+<div class="hmw-card">
+  <div class="hmw-id">HMW-009 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=5</span></div>
+  <div class="hmw-q">どうすれば偏食に悩む親が、補助食品に頼ることへの罪悪感なく「今はこれでいい」という受容に至れるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-I" style="display:none">
+  <div class="det-id">CL-I</div>
+  <div class="det-name">複数児個別対応の複雑化と献立設計困難</div>
+  <div class="det-count">3名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 3名 / 20%</span>
+  <span class="sb sb-depth-高">課題の深さ: 高</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">複数児家庭に限定されるが、該当家庭での課題は深刻</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「2人目の小３息子（9歳）が離乳食の時から偏食だった。お粥や白ご飯は食べるが、野菜やお肉に手を出さない。マヨネーズやドレッシングも嫌い。少しずつ食べるものが増えてきてはいるが、イヤイヤ食べている。食事に1時間以上かかる。」</div>
+  <div class="qs">P-004</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「1人目の中３息子が離乳食の時から偏食ぎみで今も食べるものの方が少ない。魚や葉物野菜は全般だめ。スローペースだが少しずつ食材は増えていて、この1年で納豆が食べられるようになった。給食も主食しか食べない日が多い。初めてのものは基本的に食べず、パパママが出したものだけ食べる。2人目3人目の娘はなんでも欲しがって食べる。料理はパパママ半々でパパの方が栄養は気にしているかも。」</div>
+  <div class="qs">P-005</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「子供の要望、栄養バランス、値段、親の満足を両立できる献立を考えること。短時間である程度手の込んだ子供でも食べれるもの。」</div>
+  <div class="qs">P-006</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-8-CL-I')">
+    <span class="iid">ICL-8</span>
+    <span class="ilabel">献立設計の過負荷と個別対応の複雑化</span>
+    <span class="imeta">T2 | 厚い | 4枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-8-CL-I">
+    <p class="icl-desc">複数の子どもを持つ家庭では、各子どもが異なる偏食パターンを持つことで 「全員に最適な単一の食事」が原理的に存在しない状況に置かれる（INS-209）。 毎食の具材比率変更・取り分け・別メニュー作成が常態化し（INS-135）、 これ自体が追加的な認知負荷となってICL-3（時間的・認知的過負荷）を増幅させる。
+P-006の事例では兄弟競争型ゲーム化を避け協調型家族目標化を求める設計思想が現れ （INS-044）、個差のある複数児に対して「公平性」を保ちながら食育を継続する 困難さが示されている。不在検出では複数児への公平性の心理的葛藤（INS-330, INS-346, INS-337） が繰</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">△</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">◎</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#f1f5f9;color:#64748b">低</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#64748b">4<span style="font-size:10px;font-weight:400;color:#94a3b8">/4</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#64748b">1.00</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: R">
+      <div class="dm-val" style="color:#64748b">1<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#64748b">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-8: 献立設計の過負荷と個別対応の複雑化
+├── INS-135: (パターン) 複数児個別対応の常態化と追加負荷
+├── INS-209: (動機推論) 全員最適解不在が疲弊を加速させる
+├── INS-011: (矛盾) 高学年児童の発達段階に応じた対応基準が整理されていない
+└── INS-044: (矛盾) 競争型ゲーム化への懸念vs協調型家族目標への肯定
+</div>
+    <span class="root-cards-link">▶ 根拠カード 4件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  
+<div class="bp-card">
+  <div class="bp-hdr">
+    <span class="bp-id">BP-04</span>
+    <span class="bp-name">複数児対応特別食廃止・取り分け定着型</span>
+    <span class="bp-n">3名</span>
+  </div>
+  <div class="bp-jtbd">「子どもが食べるかどうかを毎食考える頭のリソースを、もっと別のことに使いたい」</div>
+</div>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-006 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=3</span></div>
+  <div class="hmw-q">どうすれば子どもに偏食がある複数児家庭の親が、毎食の献立決定で生じる認知負荷を、料理の質を落とさずに削減できるか？</div>
+</div>
+</div>
+<div class="cluster-det" id="det-CL-J" style="display:none">
+  <div class="det-id">CL-J</div>
+  <div class="det-name">ピア情報不足と偏食専用コミュニティ不在</div>
+  <div class="det-count">4名 / 15名</div>
+  
+<div class="score-badges">
+  <span class="sb sb-freq">確認: 4名 / 27%</span>
+  <span class="sb sb-depth-中">課題の深さ: 中</span>
+  <span class="sb sb-unmet-高">未充足度: 高</span>
+</div>
+  <div class="core-insight">不在の認識が強い。現在のコミュニティとのニーズのミスマッチが課題</div>
+  <div class="sec-title">代表発話</div>
+  <div class="quote-wrap">
+<div class="quote-card">
+  <div class="qt">「1人目の中３息子が離乳食の時から偏食ぎみで今も食べるものの方が少ない。魚や葉物野菜は全般だめ。スローペースだが少しずつ食材は増えていて、この1年で納豆が食べられるようになった。給食も主食しか食べない日が多い。初めてのものは基本的に食べず、パパママが出したものだけ食べる。2人目3人目の娘はなんでも欲しがって食べる。料理はパパママ半々でパパの方が栄養は気にしているかも。」</div>
+  <div class="qs">P-005</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「栄養が不安。好き嫌いあるが、野菜も声掛けすれば食べるのでそこまで困らない。本当は良くないと思うが、「お姫様になれないよ」と声掛けする。ただ、食べる量にムラがあるので栄養が不安。ピーマンは欠片しか食べない。食べる野菜は決まっていて、キャベツ、人参、ブロッコリー、玉ねぎ。苦いから嫌、変な味がする、程度の会話はできる。流暢な会話はまだできない。」</div>
+  <div class="qs">P-008</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「料理は奥さんがする」</div>
+  <div class="qs">P-009</div>
+</div>
+<div class="quote-card">
+  <div class="qt">「長男は好きなものはすごく食べるが偏る、下の子は何でも食べる。長男が1人の頃は1対1で食べさせてきて、拘りが強いので今も食が偏り悩んでいる。タンパク質＋炭水化物が好き（ミートパスタ、カレー、牛丼）。副菜は食べない。野菜はトマトだけ食べる。たまに親が食べているものを食べたりもするので、嫌いなものもめげずに出すがなかなか広がらない。子供から嫌いなのになんで出すんだと言われる。日々バランスを考えて食事作るのが大変。夫から提案された野菜ジュースを飲ませて少し安心感を得ている。」</div>
+  <div class="qs">P-012</div>
+</div></div>
+  <div class="sec-title">インサイト</div>
+  
+<div class="icl-card">
+  <div class="icl-hdr" onclick="toggleICL('ICL-7-CL-J')">
+    <span class="iid">ICL-7</span>
+    <span class="ilabel">孤立した親の支援不在と外部承認渇望</span>
+    <span class="imeta">T2 | 中 | 4枚</span>
+  </div>
+  <div class="icl-body" id="icl-body-ICL-7-CL-J">
+    <p class="icl-desc">専門家（栄養士・保育園）への相談が一般的なアドバイスに終始し実質機能しない（CL-G）上に、 幼児期に活発だったピア情報ネットワーク（ママ友の情報共有）が小学校進学・復職を機に 急速に消滅する（INS-136, CL-J）。この「専門家不信×ピア消滅」の組み合わせが、 親が「自分の対処でいいのか」を確認できる外部リソースの完全な喪失を招く（INS-208）。
+この孤立状態は、ICL-2で示した「外部承認なしに受容できない」構造と合わさることで、 受容転換がより困難になる悪循環を形成する。たまたまのピア接触（ママ友の一言・義母の アドバイス）が必要以上に大きな影響力を持つのは（INS-053）、</p>
+    <div class="res-grid"><div class="res-cell"><div class="res-axis">人物軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">時間軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">因果軸</div><div class="res-val">○</div></div><div class="res-cell"><div class="res-axis">行動軸</div><div class="res-val">△</div></div></div>
+    
+<div class="depth-section">
+  <div class="depth-header">
+    <span>課題の深さスコア</span>
+    <span class="depth-badge" style="background:#f1f5f9;color:#64748b">低</span>
+  </div>
+  <div class="depth-metrics">
+    <div class="depth-metric tip" data-tip="T2カードの数&#10;複数名の証言で裏付けられた&#10;インサイトカードの絶対数。&#10;多いほど証拠が厚い。">
+      <div class="dm-val" style="color:#64748b">3<span style="font-size:10px;font-weight:400;color:#94a3b8">/4</span></div>
+      <div class="dm-label">T2絶対数</div><div class="dm-sub">裏付けの厚さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="飽和度 = T2 ÷ (T2+T3)&#10;1.0=全件T2（確証）&#10;0.0=全件T3（仮説）">
+      <div class="dm-val" style="color:#64748b">0.75</div>
+      <div class="dm-label">飽和度</div><div class="dm-sub">証拠の確信度</div>
+    </div>
+    <div class="depth-metric tip" data-tip="SDT（自己決定理論）&#10;3ニーズのうち脅かされた数&#10;A=自律性/C=有能感/R=関係性&#10;検出: R">
+      <div class="dm-val" style="color:#64748b">1<span style="font-size:9px;font-weight:400;color:#94a3b8">/3</span></div>
+      <div class="dm-label">SDT脅威数</div><div class="dm-sub">心理的根の深さ</div>
+    </div>
+    <div class="depth-metric tip" data-tip="因果矢印(→)の数（最大5）&#10;多いほど原因連鎖が長く&#10;根本的な課題を示す。">
+      <div class="dm-val" style="color:#64748b">0<span style="font-size:9px;font-weight:400;color:#94a3b8">/5</span></div>
+      <div class="dm-label">因果階層数</div><div class="dm-sub">原因連鎖の長さ</div>
+    </div>
+  </div>
+</div>
+    <div class="icl-struct">ICL-7: 孤立した親の支援不在と外部承認渇望
+├── INS-136: (パターン) 幼児期ピアネットワークが小学校以降消滅
+├── INS-208: (動機推論) 専門家不信×ピア消滅×孤立の複合構造
+├── INS-067: (矛盾) コミュニティニーズ自体が内的矛盾を含む
+└── INS-068: (矛盾/T3) オンライン親和性があるが実行行動は不在
+</div>
+    <span class="root-cards-link">▶ 根拠カード 4件を見る</span>
+  </div>
+</div>
+  <div class="sec-title">行動パターン / JTBD</div>
+  <p style="color:#94a3b8;font-size:12px">なし</p>
+  <div class="sec-title">HMW候補</div>
+  
+<div class="hmw-card">
+  <div class="hmw-id">HMW-002 <span class="badge badge-blue">T2</span> <span class="badge badge-gray">n=6</span></div>
+  <div class="hmw-q">どうすれば偏食の親が、子どもの偏食に「自分一人で戦っている感」を感じずに、日常の小さな前進を確認できるか？</div>
+</div>
+</div>
+    </div>
+  </div>
+</div>
+<div class="tab-content" id="tab-utterances">
+  <div class="utt-split">
+    <div class="chip-list">
+<button class="chip" id="chip-P-001" onclick="selectPerson('P-001')">
+  30代共働きママ<span class="chip-sub">P-001 · 16枚</span>
+</button>
+<button class="chip" id="chip-P-002" onclick="selectPerson('P-002')">
+  40代共働きパパ<span class="chip-sub">P-002 · 22枚</span>
+</button>
+<button class="chip" id="chip-P-003" onclick="selectPerson('P-003')">
+  40代共働きママ<span class="chip-sub">P-003 · 5枚</span>
+</button>
+<button class="chip" id="chip-P-004" onclick="selectPerson('P-004')">
+  40代共働きママ<span class="chip-sub">P-004 · 12枚</span>
+</button>
+<button class="chip" id="chip-P-005" onclick="selectPerson('P-005')">
+  40代共働きママ<span class="chip-sub">P-005 · 26枚</span>
+</button>
+<button class="chip" id="chip-P-006" onclick="selectPerson('P-006')">
+  30代パパ<span class="chip-sub">P-006 · 26枚</span>
+</button>
+<button class="chip" id="chip-P-007" onclick="selectPerson('P-007')">
+  30代共働きママ<span class="chip-sub">P-007 · 24枚</span>
+</button>
+<button class="chip" id="chip-P-008" onclick="selectPerson('P-008')">
+  40代共働きママ<span class="chip-sub">P-008 · 14枚</span>
+</button>
+<button class="chip" id="chip-P-009" onclick="selectPerson('P-009')">
+  30代共働きパパ<span class="chip-sub">P-009 · 21枚</span>
+</button>
+<button class="chip" id="chip-P-010" onclick="selectPerson('P-010')">
+  40代共働きママ<span class="chip-sub">P-010 · 21枚</span>
+</button>
+<button class="chip" id="chip-P-011" onclick="selectPerson('P-011')">
+  30代共働きママ<span class="chip-sub">P-011 · 20枚</span>
+</button>
+<button class="chip" id="chip-P-012" onclick="selectPerson('P-012')">
+  30代共働きママ<span class="chip-sub">P-012 · 18枚</span>
+</button>
+<button class="chip" id="chip-P-013" onclick="selectPerson('P-013')">
+  50代共働きママ<span class="chip-sub">P-013 · 10枚</span>
+</button>
+<button class="chip" id="chip-P-014" onclick="selectPerson('P-014')">
+  30代共働きパパ<span class="chip-sub">P-014 · 10枚</span>
+</button>
+<button class="chip" id="chip-P-015" onclick="selectPerson('P-015')">
+  30代共働きパパ<span class="chip-sub">P-015 · 5枚</span>
+</button></div>
+    <div class="utt-panels">
+<div class="utt-panel" id="utt-P-001">
+  <div class="utt-phead">
+    <div class="utt-pname">30代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">16枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子どもが2歳ごろから白米以外食べなくなった。スナック系のおやつは食べられる。家でも保育園でも同じ傾向」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養への不安・情報不安</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「栄養の偏りが心配。ネット検索すると栄養不足→情緒不安定、発達不足などの不安も煽られる」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">成長・発達への不安</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「順調だった成長曲線が下限ぎりぎりになり、同級生との体格差も感じ始める」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">調理工夫の効果不足</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「調理を工夫しても食べないことが多い」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">時間・ストレス管理</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ただでさえ時間がないのに、調理や食事に時間がかかりストレスが溜まる」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事体験・親子関係</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親子ともに食事時間を楽しめない」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの食欲・心理のギャップ</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供は食べないのに、『完食したい』『お腹空いている』と言って泣く日もある」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">調理工夫・食べやすさ工夫</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「月齢よりも小さめに食材カット」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育・興味引き出し</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供の料理教室 → 食材や調理に興味が出た。母も調理工夫を学べる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育・参加体験</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家で料理手伝い → あそび感覚でやると作る〜食べるまで興味をもってできる。『食べてみよっか』と自分で言うことも増えた」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育の限界</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜収穫体験 → 野菜に対する興味は出たが、食べるには繋がらない」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養補助・心理的な対処</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「サプリ米　ビタミン＆鉄分 → 少しでも栄養補給できて安心」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の満足度・心理的な報酬</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「サプリで栄養補給できると安心感はあるが、作った料理を食べてくれることに勝る喜びはないと感じる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育への信念</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「できれば食材から栄養を摂ってほしい」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの自信・心理的成長</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べられることが息子にとっても自信になっているように見える」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">成長・改善</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「3歳半ごろから少しずつ食べられる食材が増えていき、4歳ごろでは自分から食べることも増えてきた」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-002">
+  <div class="utt-phead">
+    <div class="utt-pname">40代共働きパパ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">22枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食習慣の定着</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「中１息子が4歳くらいから野菜嫌いになって今も食べない」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">環境依存型の食習慣</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家ではほとんど野菜を食べず、給食では食べている」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">調理工夫による対応可能性</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「キーマカレー、餃子で細かく刻むと食べている」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">年齢とともに食の好みが変わる可能性</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「最近やっとミニトマトが食べられるようになった」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの食育への親の願い</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「いつかは野菜を食べるようになってほしい。食べ物の美味しさを楽しめるようになってほしい。自分も好き嫌いが多かったから余計そう思う」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">見た目による拒否</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜炒めなどを作っても、野菜だけ残す」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の優先課題の順位付け</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「給食は食べているので栄養面は心配していない」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">認知的バイアスの克服</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「嫌いな先入観ができてしまっているので、それを突破するほどの興味を出したいがなかなか上手くいかない」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cC">C</span>
+    <div class="ucard-main">
+      <div class="ucard-label">健康への懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜を食べないので太っている、風邪を引きやすい」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">タイムセンシティビティの認識</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「幼児期は好き嫌いが変動する大変さがあったが、成長後はこれ以上改善しないことが決まってしまったことに不安を感じる」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">対処法の限界認識</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜を刻んで好きなものに入れる → 野菜を食べるようになるわけではないと気づいてやめた」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">モデリングによる食育</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親が率先して美味しそうに食べる」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の親業の疲労</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜も食べるように言う → 毎日言うのに疲れたからやめた」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">きょうだい間での食の嗜好差</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の役割分担と時間制約</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「平日はママ、週末はパパが料理する」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">サービスの投資効果への懸念</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「習い事のように見えるが、内容はイベント。何かに直結しそう、上達しそうと思えないとお金は払えない」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">実績・エビデンスへの要求</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子どもが食べるようになったという実績があるなら考える」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">高学年児童への教育的介入の限界</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供が大きいと意思がはっきりしており、興味がないことをさせるのは難しい」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">年齢別プログラム設計への示唆</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「1〜3歳であれば、内容がなんであれ親の自己満足で終わる。体験の方が合っている」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">社会的学習への肯定評価</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「誰かのために作る体験で食事を好きになるというのは理想的な流れだとは思う」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">継続性と実効性への要求</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「年間を通して、本格的に子供が食べることを促進してくれるプログラムであれば参加してみたいと思う」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の負担軽減と子育てサポート</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「【パーソナル幼児食】利用意向：実現するならぜひ。親が試行錯誤しながら食事をつくるので、その代わりになる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-003">
+  <div class="utt-phead">
+    <div class="utt-pname">40代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">5枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子供の偏食</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「中１息子が4歳くらいから野菜嫌いになって今も食べない。家ではほとんど野菜を食べず、給食では食べている。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cC">C</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養バランス・健康リスク</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「炭水化物と肉しか食べないから太る、風邪をひきやすい」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">対処方針：親のストレス管理</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜を食べてほしいが、イヤイヤ食べてほしいわけではない。野菜ジュースやおやつを与えるくらいなら、食べなくていい。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">対処方法：長期的な馴化戦略</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べないことを受け入れる。自分がストレスをためないように心がける。食べなくても出し続ける。本人が食べないと判断したならそれでいい。慣れて食べるようになることもある。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">異なる偏食パターンへの対応</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「小学生娘は野菜食べるが、牛乳のメーカーに拘るなど、たまに繊細な面がある。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-004">
+  <div class="utt-phead">
+    <div class="utt-pname">40代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">12枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「2人目の小３息子（9歳）が離乳食の時から偏食だった。お粥や白ご飯は食べるが、野菜やお肉に手を出さない。マヨネーズやドレッシングも嫌い。少しずつ食べるものが増えてきてはいるが、イヤイヤ食べている。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事時間が長い</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食事に1時間以上かかる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">弁当・食事の準備</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べるメニューが決まっていてお弁当など困る」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">複数児の食事管理</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子ども3人いるので全員好きなものを探すのが難しい。2人目だけ取り分けて別のメニューにする。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cC">C</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養不足への懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「栄養不足が気になる」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの食への動機不足</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食への興味はあまりなさそう。本人は食べなくていいと思っている。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食べる習慣づけの工夫</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「幼児期は1個だけでも食べるように言う。小学生くらいになると食べる必要性を説明する。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養補助食品の活用</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「朝は時間がないのでジュニアプロテイン、野菜ジュース、グミで補給」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食べる訓練</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「夜は食材を完食させるようにしている」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食べやすい形への調理工夫</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「サラダはハードル高いので、主食に混ぜてチャーハンなど食べさせる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">体験を通じた食への動機づけ</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜を育てる、自由研究で起源を調べる、料理に参加すると興味がわく」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養補助食品への態度変容</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「なんとなく幼児期は避け、小学生から与えている。飲料だと子供が飲みやすい。プロテインは微量栄養素も入っており、体つきがしっかりした実感があって続けている。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-005">
+  <div class="utt-phead">
+    <div class="utt-pname">40代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">26枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事準備の複雑化</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「みんな同じメニューで食事を出せない。兄弟の年齢が近いので、早い時期から食事のばらつきに困っていた。同じメニューでも1人1人に合わせて具材や盛り付けを若干変える必要がある。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">既存ソリューションの限界</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ミールキットは便利だから使えるなら使いたかった。食べないと困るし、+αで食べるメニューを準備するのが目に見えているから使わなかった。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">社会的プレッシャー</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「学校からも心配される」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の理想と現実のギャップ</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「みんな同じもの食べればいいのに、嫌いなものが少し入ってるぐらい食べればいいのに」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">段階的試食の有効性</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「1口だけ食べるようにすすめる → かなりしつこくすすめ、里芋煮っころがしが食べられた。これなら食べられると本人も言った。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">柔軟な栄養評価基準</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜、肉などカテゴリーで何か1つでも食べていたらよしとする」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">新たな可能食材の発見と活用</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「給食でスタミナ納豆を食べられるようになった（家では作ったことのないメニューだった）。これをきっかけに、夕食をあまり食べなかった日は最後に納豆をあげる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">家庭菜園による興味喚起の限界</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家庭菜園もして楽しい思い出にはなっているが、食事にはつながっていない。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">既存専門家サービスの有効性限界</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「栄養士相談は当たり障りのない内容しかなく、自分に当てはまる解決策はなさそうなので頼らない。」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">幼児期の調理方法の後悔</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「体は華奢だが、栄養不良とまではなってないので心配はしないことにしている。離乳食〜2歳くらいまで味付けあまりせずに与えていたので、今思えばもう少し美味しく調理したらよかったのかも。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">代替栄養補助の選別</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「栄養補助の発想はなく、打錠は苦手だからサプリは与えない。ミロ、野菜ジュースはあげる。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親としての心理的受容</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「幼児期の段階で食べさせることを諦めた。自分も嫌いなものは多いので、無理に食べさせることはしたくない。ただ、食べられるものが増えたり保育園で食べていたと聞くと嬉しい気持ちにはなる。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">夫婦間の協働と相互学習</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「誰が何を食べるかといった細かい情報は旦那さんと詳しく話すことはない。日常の中で旦那さんは何となく覚えていってくれている。旦那さんが野菜をジュースで代替していて、それでもいいんだと気が付いたことがある。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">複数仕様の常時保有</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「納豆も普通のもの、ひきわりのものと好みが分かれるので、常に両方買うようにしている。旦那さんも買ってきてくれる。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ママ友ネットワークでの知見共有</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「幼児期はロな旦那さんよりもママ友と共有していた。これだったら食べるっていうメニューの工夫や製品を共有して、結果も共有していた。まだ子供がなんで食べないのかわからないから、色んなものを試してみる実験感覚だった。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">発達段階に応じた対話可能性の向上</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「小学生になったら子供に直接理由を聞けるので楽になった。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">成長可視化の価値</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べられるようになる変化点がわかるのはいい。子どもと一緒に見返して、自信をつけることもできそう。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">メニューレパートリー拡大への期待</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「こんなメニューも食べるのではと提案してくれると嬉しい。作れるメニューが広がると料理が楽になるから。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養分析・補充提案</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べたものを分析して、足りていない栄養素を補える製品紹介をしてくれるといい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cC">C</span>
+    <div class="ucard-main">
+      <div class="ucard-label">個別最適化の価値認識</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「製品やサービスとのマッチングもいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">既存ソリューションの限界の再確認</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ミールキットは便利なことはわかるし使えるなら使いたかった。結局子供に合わせて+αで作る必要が出るので、労力が変わらないので使わない。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">継続性への懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「懸念：記録は面倒だから続かないかも。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">目的の明確化による動機付け</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子どものためになることがわかれば頑張れそう。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション利用期間の限定性</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「やっても小学生くらいまで。子どもがちゃんと話せるようになると必要ない。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">AI褒賞への懐疑</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「褒められなくていい。AIに褒められても所詮機械と思う。」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">実質的なインセンティブ設計への選好</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「レベルUPしていく、ポイントがたまって割引になる方がいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-006">
+  <div class="utt-phead">
+    <div class="utt-pname">30代パパ</div>
+    <div class="utt-seg">共働き親（父親が主体的に料理）</div>
+    <div class="utt-cnt">26枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">献立設計</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供の要望、栄養バランス、値段、親の満足を両立できる献立を考えること。短時間である程度手の込んだ子供でも食べれるもの。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">献立バリエーション</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「全部考えるとレパートリーが少ないので親が飽きる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">初期学習コスト</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「タスクが多いから最初はめちゃくちゃしんどかった。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">既存ツール・レシピサービスの限界</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供の好みの幅を広げたいけど、レシピ検索だと同じようなものが多いので不満。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の充足感</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「料理が好きなので、子供向けレシピで検索絞ることはしない。自分も食べて満足したいから。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親のモデリング</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「普段から父親が料理をする姿を見せる。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育・親子体験</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供と育てた野菜を一緒に調理し、母親に振る舞うこと。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食改善・ゲーミフィケーション</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「好きな料理に苦手な野菜を少量ずつ入れて、子ども自身に食べれることを理解させること。食材当てゲームで理解する。→餃子に入っている食材を当てさせる。肉に少しだけニラを混ぜておいて、何が入っているかクイズした。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">心理的変容・自信醸成</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ニラが入っていると知ると子供は驚いて、食べれたことも嬉しそうにした。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">段階的食育・ペース管理</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「次はニラの比率を増やし、違う野菜でもクイズする。飽きてもよくないので月1か隔週でやっている。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">個別対応・段階的接近</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「同じメニューでも子供によって具材の比率を変えていて、少しずつ同じ比率に近づけていく。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育・農と食の連結</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家庭菜園で子供が好きなトマトを育て、今日の料理に使おうと話すと興味が増えた気がする。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食材選定の優先順位付け</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べてほしい食材には栄養価、汎用性、コストで優先順位がある。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">対処の満足度・改善志向</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「今の方法には試行錯誤してたどり着いた。もうちょっと改善はさせたい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">プライバシー・私的領域</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「特に共有しないし、したいとも思っていない。料理は自分の領域だから。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">家族への貢献・成果実感</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「奥さん自身が健康診断でいい結果だったことで栄養管理を感謝された。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">日常的な記録作業の負荷</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「毎日はしんどいかも。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">最小限の入力負荷での実行</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「写真とって、足りない情報だけ入力ぐらいならできる。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション受容性</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「今の状態だと使わない。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">記録機能への評価・献立提案機能要求</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供の食事の記録が取れるのはありがたい。最近作っていないレシピを思い出さしてくれるといい。献立作成に一番困っているから。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ゲーミフィケーション・家族共体験</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べた食材がマップとして広がるイメージは好印象。子供と目標達成しながら一緒に楽しみたいから。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">目標食材の優先度設定</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べてほしい食材には栄養価、汎用性、コストで優先順位がある。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション機能構成</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「①②だけに重点があると使わない。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">既存SNS習慣との競合</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食事の記録はSNS（ツイッター）で料理をアップしていて、シェアしている人たちからいいねをもらえるので不要。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">兄弟間の競争・対立リスク</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供にどうやってゲーム性を魅せるかが難しそう。兄弟同士で競わせると喧嘩になりそう。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">協調的ゲーミフィケーション</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家族全体で領土が広がる方がいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-007">
+  <div class="utt-phead">
+    <div class="utt-pname">30代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">24枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食感への敏感性による偏食</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「離乳食は何でも食べたが、2歳過ぎから好き嫌いがはっきりしてきた。たぶん食感に敏感で、ナス、キノコ、繊維質の肉は食べない」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食感への嫌悪反応の確認</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「丸のみする傾向があるから。4歳から『ぐにゅっとした食感が嫌いなの？』『うん』と言葉で確認できるようになった」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食の改善傾向</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「最近は一口だけでも食べてくれたりする」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">市販サービスと子どもの好みのズレ</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「Oisixを使っていて、子供が好きな味や食材ではないので食べなかった。育休中にやめて、自分で献立考えると食べるようになってきた」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">時間制約下での献立管理戦略</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「今は子どもが食べるメニューで1週間分の献立を7種類持っている。それを回しているので復職しても何とかなりそう」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養不足への親の不安</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「3歳くらいの夕食で何も食べず、ふりかけごはんだけ食べる時期は栄養面が心配だった」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">夕食時の偏食が重点課題</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「夕食（毎日）。朝は子どもがすんなり食べるものにする」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の試行錯誤ストレス</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べない時期は『なんだったら食べるの？』」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事準備の無駄感による親の心理的負荷</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「作ったものそのまま捨てる日は『何やってるんやろ？』」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の対応策による心理的負荷軽減</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子ども用に特別に作らないから、ストレスはまだ小さい」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">完璧でない栄養バランスの受容</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「バナナ食べてたらいいやと割り切る」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">信念と負荷のズレ</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「いつか食べてくれると思って食卓に出し続ける。でもめっちゃストレス」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事の視覚的な色分けによる管理</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食材を緑(野菜)・赤(肉)・黄(脂質/炭水化物)に色分け。→保育園の給食でやっていたのを真似た」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">色分けゲーミングによる偏食改善</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家では口頭で、何色の食材かを説明する。『今日は緑レンジャーぜんぜん食べてないよ』というと、頑張って食べてくれる。食わず嫌いが改善した」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの食事参加による興味喚起</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「夕飯作りのお手伝い、一緒にお菓子作り」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">段階的な改善目標の設定</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「満足度は3.5〜4（真ん中よりは上）。現在はまんべんなく食べるが、苦手なものは1かけ。変化：手を付けない→まんべんなく食べる→全部をバランスよく食べる、までやりたい」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">パートナーからの応援・サポート</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「夫は夕食中に帰宅。子どもが頑張っている最中なので、応援してくれたりする」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">パートナーとのコミュニケーション・期待管理</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子どもが寝た後に相談したりもする。夫は言うとやってくれるので不満はなく、察することも期待はしていない」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">父親による食事への関心喚起</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「お風呂で『給食で何食べたか』とかを子どもに聞いてくれる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親のストレス対応の多様性</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「保育園のママ友にも相談したが、自分以上にひどく、食卓に出すのを諦めていると言っていた」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">世代間のサポート・アドバイス</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「義母に『出し続ければいつか食べる』と言われてがんばってる」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">色分けゲーミングへの子どもの関心</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「色分けは子どもが好き。一緒に見られたら喜びそう」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">色分けによる親子コミュニケーション促進</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「今日はこれ食べたねと子どもと話せそう」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">手入力負荷の最小化要件</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「懸念：ずぼらなので、記録が手間にならない方がいい。手入力はなし、選択だけがいい。写真アップはいい」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-008">
+  <div class="utt-phead">
+    <div class="utt-pname">40代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">14枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養知識不足に起因する栄養バランス不安</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供の栄養バランスが足りているのか不安になる。不足しやすい鉄分とか、免疫に必要な栄養とか。鉄不足＝ほうれん草、くらいの知識なので、ビタミンとかになると食材選びが難しい。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cC">C</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事量のばらつき</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べる量にムラがあるので栄養が不安。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子供の偏食（野菜選別）</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ピーマンは欠片しか食べない。食べる野菜は決まっていて、キャベツ、人参、ブロッコリー、玉ねぎ。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">時間制約による調理負荷</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「時間がなくて1品作るのに精いっぱい。仕事終わってからはめちゃくちゃしんどいので、限られた食事でパパっと作ることになる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親としての栄養提供責任感</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「同僚ママ同士で、ごはんなんて適当でいいよね〜と言いつつも、本当にこれでいいのかな？と不安になる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">自然志向・添加物回避</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「できれば自然に栄養取りたいのでサプリは使用しない。子供が生まれてからは添加物も気にするようになった。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">調理時間短縮による栄養・食事量改善</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「土日に仕込み（野菜を切る、豆腐をこねるなどなど）を手伝ってもらったことがあり、その場合は完食。時間は倍以上かかるので平日はできない。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ピアラーニング・解決策の共有</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「同僚ママには共有する。土日の作り置きの話とか、平日の乗り切り方がメイン。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション試行から価値観ミスマッチによる離脱</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「Palsystemミールキットはやったことあるが、複合調味料の中身がわからず、添加物が気になるのでやめた。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ゲーミフィケーションによる親子エンゲージメント</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「地図が広がっていくのは子供と一緒にゲーム感覚で楽しめそうでいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養データの粒度不足</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「懸念：リアル栄養素まで知りたい。肉、野菜、米くらいのバランスは基本でできているから、ビタミンとかの詳しい量を知りたい。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">可処分時間の極度の不足</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「限られた可処分時間をアプリに使わない。食事の準備で精一杯な中、食事前後にアプリは開かない。ママ友の返信も返せていない状況だから。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">アプリ使用による負の影響</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「アプリで子供の気が散るのも困る。寝る前の自分時間をこれに使いたくもない平日は。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">非同期・遅延フィードバックモデルの可能性</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「平日は写真を撮りためて、休日に見直すくらいならできそう。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-009">
+  <div class="utt-phead">
+    <div class="utt-pname">30代共働きパパ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">21枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食による栄養不安</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「上の子が野菜パン、納豆しか食べなかった。体が小さくて、栄養不足なのか不安だった。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">対処アドバイスの実効性欠如</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「栄養相談→貧血なので肉を勧められるが、食べないから意味がない。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">対処の試行錯誤による疲弊</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べないせいで体が小さいのではと不安な時期は栄養士に相談もして、できる工夫は一通りやったがだめだった。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">試行された対処（無効）</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「掴み食べ → 効果なし」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">調理参加による関心喚起</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「年中から野菜切る、混ぜるの手伝いをすると少し食べる気がした。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親のリソース不足</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親も疲れるからたまにしかできない。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">好みの可視化による適応</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「本人の好き嫌いが把握できると合わせたメニューにできる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">医学的介入による動機付け変化</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「成長ホルモン投与で体が大きくなり、食べる必要がでた感じ」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の期待値リセット</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「成長ホルモンが少ないと分かった時に諦めが付き、その頃から大人と同じ食事でいいやと思うようになった。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親のストレスと無駄感</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供用に作ったものが全部ごみになるのもしんどい」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親のストレス軽減優先の判断</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「大人と同じ食事にすればストレスにならない。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の心理状態と子供の発達</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親のイライラが子供にも伝わるからよくないと思う。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">同じ深刻度の親へのコミュニティニーズ</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「同じレベルで悩んでいる人と共感したい。深刻に悩んでいる分、他人に話すことがしんどい。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">コミュニティ分断による孤立感</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「逆にうちは言葉の発達が早く、そこに悩んでいる親とは話しにくい経験がある。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">オンラインコミュニティへの親和性</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「顔が見えない相手の方がいい。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">セグメント別コミュニティへのニーズ</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「偏食ママ同士のコミュニティに繋がれば安心。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">機能的価値への評価</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「地図でできることが増えるのがいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cC">C</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子供向けUI/UXの期待</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供がタッチできるといいな。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ログ・管理負荷への懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ほんとに食べないと、食べたもの管理がしんどい。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューションの副作用への懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「逆にストレスにならないか。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cC">C</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の心理的負担についての懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「大人が一人でやると不安になるかも。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-010">
+  <div class="utt-phead">
+    <div class="utt-pname">40代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">21枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食・食べムラ</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「3人目が2歳で食べない。食べムラ、好きなものだけ食べる、全然手を付けないことがあり、毎日攻防戦をしている。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事廃棄</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ある程度進めて食べなければ諦めて、泣く泣く捨てる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養不安の軽減</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「保育園の給食は何でも食べているようなので、そこで栄養摂っていると信じて神経質にならないようにしている。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">不安軽減</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「3人とも好き嫌いはあって年中、年長で食べるようになってきたので、今は食べない時期と思っている。1人目の時は特にこんなんでいいのかという不安が強かった。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">調理負担の最小化</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供用に食事を作ることはなく、家族分を取り分けて刻むくらい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養補助食品利用</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「サプリ米を使っていて、精神安定剤みたいになっている。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">社会的学習への認識</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「周りが食べていると食べるのかも。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">専門家サポート不足</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「園に相談してどうにかしてくれるわけでもないし。健診で相談しても大丈夫と言われるだけだった。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育体験の適性</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「祖父母の家で野菜収穫してみた。子供が土を触るのが嫌で向いてなかったが。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食べさせの工夫</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「兄弟で競争して食べさせると、焦って食べる。本当はよくないと思うが。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">環境による習慣形成</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「保育園では食べることが習慣になっていそう。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育体験の価値認識</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「1人目の時は伊丹市の料理教室イベントに何度か行った。材料も揃っていて、お菓子作りのかわいい飾りもいっぱいあって、ラッピング材料まであって子供も楽しそうだった。1回1000円くらい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親子料理の難しさ</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親子料理で大変なのは、どこまで子供にやらせるかの判断。失敗のリカバリーは親になるので、危ないこと、汚れることは事前に推測してやめておく。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">年齢別料理参加</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「小4は一緒にできるけど、包丁はまだ危ない。2歳でも袋で肉をもみ込むときは興味ありそうに見てくるのに気付いている。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">時間余裕の制約</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家で料理するのは時間と余裕があるとき。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション受容</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「遊びの延長程度の料理体験で食事に興味を持つのは実体験もあり共感。遊びの一環として子供が楽しむなら続ける。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">環境・習慣の活用</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「園でやったことなら苦手でも食べそう。兄弟にも見せると話題になる。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">衛生管理への懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「衛生面は気になる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">教室型体験への購買意向</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「自治体の料理教室は楽しかったので、保育園でできるなら全然行く。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション購買条件</div>
+      <div class="ucard-tags"><span class="utag">行動変容</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「利用したい頻度：月1ならいい。価格は300〜500円。体験込みならば納得。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ストレス軽減型ソリューション</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親子のためのレストランをぜひ。普段は何を食べさせるか気にしているが、今日は好きなものだけ食べてもいいか！と割り切ることでストレスが軽減されそう。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-011">
+  <div class="utt-phead">
+    <div class="utt-pname">30代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">20枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「2歳息子が好き嫌いが多い。離乳食の時から肉を食べず、果物も数品しか食べない。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの嗜好把握</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「苦手な食感がありそう、濃い味が好きそうだと何となく感じている。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の期待と現実のギャップ</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「野菜関係の仕事なので、初めは野菜好きになってほしいと思っていたが、...素材の味を伝えるとかは諦めた。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養への考え方</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「肉は食べないが、大豆製品やヨーグルトは好きなので栄養の偏りまでは心配していない。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">環境による食行動差</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「保育園では食べているみたいで、友達や親の食べ物を欲しがることがあるから、周囲の影響が大きいのかも。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の心身管理</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べてほしい気持ちはあるが、やる気自信喪失しても嫌なので頑張りすぎない。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">努力の報われなさ</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べてほしくて頑張ったものほど食べず、お惣菜はすんなり食べたりする。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の期待値設定</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「夫婦ともになんでも食べてほしいまでのモチベーションはないので、まあいいかと諦めている。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">信頼できる情報源の探索</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「身近な友人、保育士さんを参考にしながら安心したり育児に取り入れたりする。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">社会比較による自信喪失</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「インスタとか見ると、キラキラした情報が多い。きれいな食事の写真で食べたという投稿を見ると、自分と遠いと感じて自信がなくなるので見ないようにしている。」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">既存食育施策の限界</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「図鑑で食材を見せるはやってみたが、それで食べるわけではない。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">実施障害（環境・手間）</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「クッキング食育や親子料理に興味はあるが、家が散らかるリスクが高いのでまだやっていない。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">段階的な食育実施</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「もう少し聞き分けができてからやってみたい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの食育ニーズの見落とし</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親が料理中に、子供がスプーンとお皿でまぜまぜする真似をするので、興味はあるんだと思う。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">外部支援の需要</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家庭でできないことをやって、子供が食に対して別の見方ができるようになってくれたら嬉しい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">期待値の現実化</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食べるまでいかなくてもいい。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">外部機関との連携の価値</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「保育園によって差があるので、そこに企業が入ってサポートするのはいいと思う。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">実践的な育児ノウハウの需要</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「登降園時の保育士さんの何気ない仕草を見て、子供の扱い方の参考にしている。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">実施障害の除去によるニーズ顕在化</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供との料理の仕方がわかるなら嬉しいし、家でやりたいと思える。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">価格感応度</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「月1で今月のミールキットとして、1回1000円未満（3桁）がいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-012">
+  <div class="utt-phead">
+    <div class="utt-pname">30代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">18枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食問題</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「長男が1人の頃は1対1で食べさせてきて、拘りが強いので今も食が偏り悩んでいる。タンパク質＋炭水化物が好き（ミートパスタ、カレー、牛丼）。副菜は食べない。野菜はトマトだけ食べる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親子間のストレス</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「嫌いなものもめげずに出すがなかなか広がらない。子供から嫌いなのになんで出すんだと言われる。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食事準備の負荷</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「日々バランスを考えて食事作るのが大変。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">家族間のコミュニケーション</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「夫は献立工夫したらと提案してくるが、大変でできないので流す。『言うのは簡単だよねと思う。』」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">孤立感・情報不足</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「相談する機会がない。保育園でママ友と会話する時間もない。年1回友達と話すくらい。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">栄養補填への試み</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「夫から提案された野菜ジュースを飲ませて少し安心感を得ている。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">家族サポートの不足</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「実母、義母は食べるもの出すしかないよねと言う。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">潜在的な食の広がり期待</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「たまに親が食べているものを食べたりもするので、嫌いなものもめげずに出す。たまに食べる瞬間を期待している」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育体験の実例</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「幼稚園でトマトの苗もらって育てたことある。もともと好きだから食べた。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育実践の障壁</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供と料理はしておらず、やりたいと言っても困る。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">理想と現実のギャップ</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「長期的にみるとやった方がいいとは思うができない。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育実践への支援ニーズ</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食育体験で、子供の年齢的にこのレベルならできるんだとわかれば、家でもできるのかもしれない。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション評価_肯定</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ミールキットは夕食の1品になるのがいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション期待効果</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「月2回、今日触った人参だよと言って食べてくれたら嬉しい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">食育アプローチの洞察</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家で調理したものは『また出てきた』と食べないが、園でやったものは別物になると思う。親でなく先生から、食材の食べる意味を説明してくれると効果があるかも。必要性を理解して食べてほしいから。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション導入への懸念</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「懸念：親子参観だと仕事の調整が大変。相談する機会がない（保育園に相談したことがない。相談しても意味がないと感じている）。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">優先度の明確化</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「食育に力を入れているという理由で保育園を選ぶことはない。利便性の方を重視する。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ソリューション利用計画</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「利用したい頻度：月2回」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-013">
+  <div class="utt-phead">
+    <div class="utt-pname">50代共働きママ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">10枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの偏食・嫌いなものが多い</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「14歳息子が小さいころから嫌いなものが多く小食。今でも生野菜、根菜、固い肉魚が嫌い。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">体格・発育に関する不安（いじめリスク）</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「小中学生になってくると、体格が小さいことがいじめにつながったりする。とにかく大きくなってほしくて食育やサプリを試した。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">本格レストラン体験を通じた食育の試行</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「1歳の頃から本格レストランに子供を連れて行った。（アラペサ、ルクール）親が美味しいものを食べたい気持ちもあったが、そういう店だと食べることがあった。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親子向けミールキットの食育活用</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ベネッセがやっていた親子向けミールキット。大人＋子供の分量が入っている。子供にできるだけ色んなものを試させたくてやっていた。」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">習い事の優先順位付けにおける判断基準</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「習い事と認識したが、内容的に小学生以上だと思う。小学生以上になると、プログラミングなど本気の学習系との比較になるので食育は負ける。」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の動機づけ負担が大きい</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「習い事としてなら何かできるようになりたい。ただ、子が興味ないものに対して、親が動機付けしなければいけないのはかなり大変だからやりたくない。」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">既存の選択肢との比較</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「料理体験は子どもも楽しめるが、キッザニアで○○づくり体験があるのでそちらでいい。」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">本物志向・希少性の価値</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「フレンチ、懐石料理体験など自宅で再現不可なプログラムだと興味がわく。本物の料理を食べる体験の方が興味あり。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親子レストランへの強い購買意向</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親子レストランは実現するならぜひ。子どもが本格的な料理だと食べることがあったので、1歳のころから高いレストランにたまに連れて行った。その代わりになりそうなイメージ。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">ミールキット選択における品質・本格性の重視</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「ショクスク（ミールキット系）は世界のごはんが本格的ならやりたい。ベネッセの親子向けミールキット（アンファミーユ）をやっていた時期があった。今は販売中止したので、ヨシケイのラビューというミールキットサービスをしている。本格的で食材もしっかり入っているからOisixよりいい。」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-014">
+  <div class="utt-phead">
+    <div class="utt-pname">30代共働きパパ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">10枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">子どもの偏食</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「3歳娘が好き嫌いある程度ある。深刻に悩むわけではなく」</div>
+  <div class="ucard-foot"><span>受容</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親子クッキング</div>
+      <div class="ucard-tags"><span class="utag">行動・対処</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「パン作り、ピザづくりなど子供と一緒にやる」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">サービス評価基準</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「習い事なら具体的な行動変化が欲しい。提示チラシは抽象表現が多くて、結局何ができるのかよくわからなかった。具体的行動とは自分で食べるようになるみたいなこと」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の自由時間</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親の自由時間創出できそうなニュアンスがあると、技能習得できなくてもOKと思える。預けている間に映画見れるとか」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親の負担</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「家で子どもの夕食づくりサポート→親の負担がどこまであるかを懸念（家に人をあげる、洗い物片付け、汚れた洗濯物発生など細かい面倒がいくつも上がる）」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">サービス改善提案</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「こどもフードラボなら、具体的な行動変化を提示するor親の時間獲得ニュアンスにするとよい」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">親子向け外食</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「①親子レストラン→あったらぜひ欲しいが、事業が成り立つのか疑問。外食していて、完全に親子向けというのはない」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">外食時の親の負担</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「注文する間の子どもの管理、食べさせる時の周囲への気遣いがある。そうした不満がすべて解消される場所が実現するなら欲しい」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">パーソナル化の品質</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「②パーソナル幼児食は実現したらすごいが、ネックは精度の高さ。精度が価値に直結する」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示後_否定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">事業スケーラビリティ</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「③ショクスクはビジネスとして成り立ちそう。料理初心者に刺さるという結果が調査で得られれば実現できるが、単価をそこまで上げられないのでスケールはしにくそう」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div>
+<div class="utt-panel" id="utt-P-015">
+  <div class="utt-phead">
+    <div class="utt-pname">30代共働きパパ</div>
+    <div class="utt-seg">共働き親</div>
+    <div class="utt-cnt">5枚</div>
+  </div>
+  <div class="ucards-wrap">
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">調理の手間</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「子供のために細かく野菜を刻むのが手間」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">偏食</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「保育園では食べているようだが、家では食べないことが多い」</div>
+  <div class="ucard-foot"><span>困っている</span><span>コンセプト提示前</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cA">A</span>
+    <div class="ucard-main">
+      <div class="ucard-label">コンセプト評価：親子レストラン肯定</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「親子レストランは金額考慮してもぜひ使いたい。頻度は月1くらい」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">社会的環境による行動変化への期待</div>
+      <div class="ucard-tags"><span class="utag">価値観・判断基準</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「同年代の子供たちがいる場なら食べるかもしれない。食への興味が進んで、自分で食べる力がついてくれるといいなと思う」</div>
+  <div class="ucard-foot"><span>前向き</span><span>コンセプト提示後_肯定</span></div>
+</div>
+<div class="ucard">
+  <div class="ucard-head">
+    <span class="cred-badge cB">B</span>
+    <div class="ucard-main">
+      <div class="ucard-label">コンセプト評価：パーソナル幼児食否定</div>
+      <div class="ucard-tags"><span class="utag">課題・困りごと</span></div>
+    </div>
+  </div>
+  <div class="ucard-quote">「パーソナル幼児食は必要情報の入力やフィードバックの煩雑さがありそう。値段も高いと感じる」</div>
+  <div class="ucard-foot"><span>無関心</span><span>コンセプト提示後_肯定</span></div>
+</div></div>
+</div></div>
+  </div>
+</div>
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('tab-' + name);
+  const btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+  if (sec) sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function selectCluster(cid) {
+  document.querySelectorAll('.cl-card').forEach(c => c.classList.remove('selected'));
+  const card = document.querySelector('.cl-card[data-id="' + cid + '"]');
+  if (card) card.classList.add('selected');
+  const empty = document.getElementById('det-empty');
+  if (empty) empty.style.display = 'none';
+  document.querySelectorAll('.cluster-det').forEach(d => d.style.display = 'none');
+  const det = document.getElementById('det-' + cid);
+  if (det) det.style.display = 'block';
+}
+
+function toggleICL(uid) {
+  const body = document.getElementById('icl-body-' + uid);
+  if (body) body.classList.toggle('open');
+}
+
+function filterClusters(mode, btn) {
+  document.querySelectorAll('.filter-row .pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.cl-card').forEach(card => {
+    card.style.display = (mode === 'all' || card.dataset.followup === '1') ? '' : 'none';
+  });
+}
+
+function selectPerson(pid) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  const chip = document.getElementById('chip-' + pid);
+  if (chip) chip.classList.add('active');
+  document.querySelectorAll('.utt-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('utt-' + pid);
+  if (panel) panel.classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const first = document.querySelector('.cl-card[data-id]');
+  if (first) selectCluster(first.dataset.id);
+  const firstChip = document.querySelector('.chip[id^="chip-P"]');
+  if (firstChip) selectPerson(firstChip.id.replace('chip-', ''));
+});
+</script>
+</body>
+</html>
